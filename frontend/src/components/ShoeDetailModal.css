@@ -1,0 +1,117 @@
+/* ✅ ปรับขนาด Modal และตำแหน่งให้อยู่กึ่งกลาง */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+/* ✅ หัวข้อ */
+.modal-title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+/* ✅ ปรับสไตล์ข้อมูลรองเท้า */
+.shoe-info {
+    text-align: left;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+/* ✅ แสดงรูป Before & After (ด้านหน้า) */
+.before-after-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    border: 2px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    flex-wrap: wrap; /* ให้รองรับหน้าจอเล็ก */
+}
+
+/* ✅ จำกัดขนาดรูปให้พอดีกับ Modal */
+.shoe-image {
+    width: 100%;
+    max-width: 250px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* ✅ ตาราง Before & After (ทุกมุม) */
+.shoe-images-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.shoe-images-table th, .shoe-images-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+.shoe-image-table {
+    width: 80px;
+    height: auto;
+}
+
+/* ✅ ปุ่ม */
+.btn-download {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+.btn-download:hover {
+    background: #218838;
+}
+
+.btn-close {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.btn-close:hover {
+    background: #c82333;
+}

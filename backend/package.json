@@ -1,0 +1,20 @@
+{
+  "name": "cm-shoes-care-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@line/bot-sdk": "^9.7.1",
+    "axios": "^1.7.9",
+    "bcryptjs": "^3.0.2",
+    "canvas": "^3.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.17.1",
+    "express-rate-limit": "^7.0.0",
+    "helmet": "^6.0.0",
+    "jimp": "^1.6.0",
+    "jsonwebtoken": "^9.0.0",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.13.3"
+  }
+}

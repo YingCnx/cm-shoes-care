@@ -1,0 +1,9 @@
+.main-content {
+    margin-left: 250px; /* ให้เว้นที่ด้านซ้าย สำหรับ Sidebar */
+    padding: 20px;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+.sidebar-container.open + .main-content {
+    margin-left: 0;
+}
