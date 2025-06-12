@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createAdmin } from '../services/api';
+import { checkSession } from "../services/authService";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -9,10 +10,24 @@ const Dashboard = () => {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login'); // ถ้าไม่มี Token ให้ Redirect ไปหน้า Login
-    }
+    const verify = async () => {
+      const user = await checkSession();
+
+      if (!user) {
+        setTimeout(() => navigate("/login"), 0); // ป้องกัน error insecure
+        return;
+      }
+
+      if (user.role !== "superadmin") {
+        navigate("/dashboard"); // ❌ ไม่ใช่ SuperAdmin → Redirect ไปหน้า Dashboard
+        return;
+      }
+
+      setIsSuperAdmin(true); // ✅ เป็น SuperAdmin
+      fetchBranches();
+    };
+
+    verify();
   }, [navigate]);
 
   const handleCreateAdmin = async () => {

@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { processPayment } from '../services/api'; // ✅ เรียก API
+import { checkSession } from "../services/authService";
 
 const InvoicePage = ({ queue }) => {
     const navigate = useNavigate();
     const [paymentMethod, setPaymentMethod] = useState(null);
     const [showQR, setShowQR] = useState(false);
     const [isPaid, setIsPaid] = useState(false);
-
+    
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          navigate('/login'); // ถ้าไม่มี Token ให้ Redirect ไปหน้า Login
+    const verify = async () => {
+        const user = await checkSession();
+        if (!user) {
+        setTimeout(() => navigate("/login"), 0);
         }
-      }, []);
+    };
+    verify();
+    }, [navigate]);
+
 
     const handlePayment = async () => {
         if (!paymentMethod) {

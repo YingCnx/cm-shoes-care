@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { checkSession } from "../services/authService";
 import { useNavigate } from 'react-router-dom';
 import { getUsers, createAdmin, deleteUser } from '../services/api';
 import './UserManagement.css';
@@ -12,12 +13,17 @@ const UserManagement = () => {
   const [message, setMessage] = useState('');
   
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login'); // Redirect if no token
-    }
-    fetchUsers();
-  }, []);
+    const init = async () => {
+      const user = await checkSession();
+      if (!user) {
+        setTimeout(() => navigate("/login"), 0);
+        return;
+      }
+      fetchUsers();
+    };
+
+    init();
+  }, [navigate]);
 
   const fetchUsers = async () => {
     try {

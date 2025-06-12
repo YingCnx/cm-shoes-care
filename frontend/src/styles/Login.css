@@ -3,12 +3,85 @@
   align-items: center;
   justify-content: center;
   height: 100vh;
+  width: 100vw;
   background-color: #f3f4f6;
 }
 
 .login-card {
   width: 100%;
   max-width: 400px;
-  padding: 30px;
+  padding: 20px;
+  border-radius: 10px; /* ✅ Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* ✅ Subtle shadow */
+  background-color: #fff; /* ✅ White background */
 }
 
+.login-card-header {
+  text-align: center; /* Center the title */
+  margin-bottom: 20px; /* Add space below the header */
+}
+
+.login-title {
+  font-size: 1.5rem; /* Larger title */
+  font-weight: 600; /* Semi-bold */
+  color: #333; /* Darker text */
+}
+
+.login-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Add space between form elements */
+}
+
+.error-message {
+  color: red;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Add space between form elements */
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc; /* Add border to input group */
+  border-radius: 5px; /* Rounded corners */
+  padding: 5px;
+}
+
+.input-icon {
+  margin-right: 10px;
+  color: #555; /* Darker icon color */
+}
+
+.input-field {
+  border: none; /* Remove default input border */
+  flex-grow: 1; /* Allow input to take up available space */
+  padding: 8px;
+  outline: none; /* Remove outline on focus */
+}
+
+.button-container {
+  display: flex;
+  justify-content: center; /* Center the button */
+  margin-top: 10px; /* Add space above the button */
+}
+
+.login-button {
+  width: 100%; /* Make the button full width */
+  padding: 10px;
+  background-color: #007bff; /* Example blue color */
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease; /* Smooth hover effect */
+}
+
+.login-button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}

@@ -1,8 +1,11 @@
 import React from "react";
 import "../assets/css/bootstrap.min.css";
+import "./UpdateQueueStatusModal.css";
+
 
 const UpdateQueueStatusModal = ({ show, handleClose, handleUpdate, queueId, currentStatus, totalPrice}) => {
     const statusMap = {
+        "":"รับเข้า",
         "รับเข้า": "อยู่ระหว่างทำความสะอาด",
         "อยู่ระหว่างทำความสะอาด": "เตรียมส่ง",
         "เตรียมส่ง": "กำลังจัดส่ง",
@@ -40,8 +43,8 @@ const UpdateQueueStatusModal = ({ show, handleClose, handleUpdate, queueId, curr
     if (!show) return null;
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content card p-4 shadow" style={{ backgroundColor: "#fff" }}>
+        <div className="update-queues-modal-overlay">
+            <div className="update-queues-modal-content card p-4 shadow" style={{ backgroundColor: "#fff" }}>
                 <h2 className="text-center mb-3">🔄 อัปเดตสถานะคิว</h2>
                 <div className="mb-3">
                     <label className="form-label">อัพเดทสถานะคิวเป็น</label>
@@ -52,11 +55,11 @@ const UpdateQueueStatusModal = ({ show, handleClose, handleUpdate, queueId, curr
                     </select>
                 </div>
                
-                    <div className="d-flex justify-content-between mt-3">
-                        <button className="btn btn-secondary w-45" onClick={handleClose}>
+                    <div className="modal-actions">
+                        <button className="btn btn-danger" onClick={handleClose}>
                             ❌ ปิด
                         </button>
-                        <button className="btn btn-success w-45" onClick={handleSubmit}>
+                        <button className="btn btn-success" onClick={handleSubmit}>
                             ✅ บันทึก
                         </button>
                     </div>

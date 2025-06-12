@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { checkSession } from "../services/authService";
 import { getPayouts, createPayout, updatePayout, deletePayout, getBranches } from "../services/api";
 import { jwtDecode } from "jwt-decode"; 
 import "bootstrap/dist/css/bootstrap.min.css";
+import "./Payout.css";
+import { FaPlus } from 'react-icons/fa';
 
 const THAI_MONTHS = [
     "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
@@ -42,20 +45,19 @@ const Payouts = () => {
     const years = Array.from({ length: 6 }, (_, i) => currentYear - i);
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token) return;
+        const init = async () => {
+            const user = await checkSession();
+            if (!user) return;
 
-        try {
-            const user = jwtDecode(token);
-          
-            setIsSuperAdmin(user.isSuperAdmin);
-            setSelectedBranch(user.isSuperAdmin ? "" : user.branch_id); 
-            setemployeeId(user.id ?? null); 
+            const isSuperAdmin = user.role === "superadmin";
+            setIsSuperAdmin(isSuperAdmin);
+            setSelectedBranch(isSuperAdmin ? "" : user.branch_id);
+            setemployeeId(user.id ?? null);
 
-            if (user.isSuperAdmin) fetchBranches();
-        } catch (error) {
-            console.error("🔴 Error decoding token:", error);
-        }
+            if (isSuperAdmin) fetchBranches();
+        };
+
+        init();
     }, []);
 
     useEffect(() => {
@@ -157,114 +159,146 @@ const Payouts = () => {
 
     const totalAmount = payouts.reduce((sum, payout) => sum + parseFloat(payout.amount || 0), 0);
 
-    return (
-        <div className="container mt-4">
-            <h1>📉 รายจ่าย</h1>
-            <button className="btn btn-primary mb-3"  onClick={() => {
-                    setForm({
-                        id: null,
-                        payout_type: "",
-                        description: "",
-                        amount: "",
-                        notes: "",
-                        payout_date: "",
-                        branch_id: "",
-                        employee_id: null,
-                    }); // รีเซ็ตค่า form เป็นค่าเริ่มต้น
+   return (
+  <div className="appointments-container">
+    <div className="d-flex justify-content-between align-items-center mb-4">
+      <h1>บันทึกรายจ่าย</h1>
+    </div>
+
+    {isSuperAdmin && (
+      <div className="mb-3">
+        <label className="form-label fw-semibold">เลือกสาขา</label>
+        <select
+          className="form-control"
+          value={selectedBranch || ''}
+          onChange={(e) => setSelectedBranch(e.target.value)}
+        >
+          <option value="">-- ทุกสาขา --</option>
+          {branches.map(branch => (
+            <option key={`branch-${branch.id}`} value={branch.id}>{branch.name}</option>
+          ))}
+        </select>
+      </div>
+    )}
+
+    <div className="queue-card-wrapper">
+      <div className="d-flex justify-content-end mb-3">
+        <button
+          className="btn-split"
+          onClick={() => {
+            setForm({
+              id: null,
+              payout_type: "",
+              description: "",
+              amount: "",
+              notes: "",
+              payout_date: "",
+              branch_id: "",
+              employee_id: null,
+            });
+            setShowModal(true);
+          }}
+        >
+          <span className="btn-text">เพิ่มรายจ่าย</span>
+          <span className="btn-icon"><FaPlus /></span>
+        </button>
+      </div>
+
+      <div className="row mb-4">
+        <div className="col-md-3">
+          <label className="form-label">เลือกปี</label>
+          <select
+            className="form-select"
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+          >
+            {years.map((year) => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="col-md-3">
+          <label className="form-label">เลือกเดือน</label>
+          <select
+            className="form-select"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+          >
+            {THAI_MONTHS.map((month, index) => (
+              <option key={`month-${index}`} value={index + 1}>{month}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="col-md-2 d-flex align-items-end">
+          <button className="btn btn-primary w-100" onClick={fetchPayouts}>🔍 ค้นหา</button>
+        </div>
+      </div>
+
+      <h5>📋 รายจ่าย ประจำเดือน {THAI_MONTHS[selectedMonth - 1]} {selectedYear}</h5>
+            
+        {payouts.length > 0 && (
+        <div className="row">
+            <div className="col-12 text-end pe-4 mb-2">
+            <span className="fw-bold">
+                💰 รวมทั้งสิ้น: {parseFloat(totalAmount).toLocaleString("th-TH", { minimumFractionDigits: 2 })} ฿
+            </span>
+            </div>
+        </div>
+        )}
+
+      {loading ? (
+        <div className="text-center py-3">⏳ กำลังโหลดข้อมูล...</div>
+      ) : (
+        <table className="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>วันที่</th>
+              <th>ประเภท</th>
+              <th>รายละเอียด</th>
+              <th>จำนวนเงิน</th>
+            </tr>
+          </thead>
+          <tbody>
+            {payouts.length > 0 ? (
+              payouts.map((payout, index) => (
+                <tr
+                  key={`payout-${payout.id}`}
+                  onClick={() => {
+                    setForm(payout);
                     setShowModal(true);
-                }}>➕ เพิ่มรายจ่าย</button>
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  <td>{index + 1}</td>
+                  <td>{new Date(payout.payout_date).toLocaleDateString()}</td>
+                  <td>{payout.payout_type}</td>
+                  <td>{payout.description}</td>
+                  <td>{parseFloat(payout.amount).toLocaleString("th-TH", { minimumFractionDigits: 2 })} ฿</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="text-center text-muted">ไม่มีข้อมูลรายจ่าย</td>
+              </tr>
+            )}
+          </tbody>
+          {payouts.length > 0 && (
+            <tfoot>
+              <tr className="table-dark">
+                <td colSpan="4" className="text-end fw-bold">รวม</td>
+                <td className="fw-bold">{parseFloat(totalAmount).toLocaleString("th-TH", { minimumFractionDigits: 2 })} ฿</td>
+              </tr>
+            </tfoot>
+          )}
+        </table>
+      )}
+    </div>
 
-            <div className="card p-3 mb-3 shadow">
-                <div className="row">
-                    {isSuperAdmin && (
-                        <div className="col-md-3">
-                            <label className="form-label">เลือกสาขา</label>
-                            <select className="form-select" value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)}>
-                                <option value="">-- ทุกสาขา --</option>
-                                {branches.map(branch => (
-                                    <option key={`branch-${branch.id}`} value={branch.id}>{branch.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-
-                    <div className="col-md-3">
-                        <label className="form-label">เลือกปี</label>
-                        <select className="form-select" value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))}>
-                            {years.map((year) => (
-                                <option key={year} value={year}>{year}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="col-md-3">
-                        <label className="form-label">เลือกเดือน</label>
-                        <select className="form-select" value={selectedMonth} onChange={(e) => setSelectedMonth(Number(e.target.value))}>
-                            {THAI_MONTHS.map((month, index) => (
-                                <option key={`month-${index}`} value={index + 1}>
-                                    {month}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="col-md-2 d-flex align-items-end">
-                        <button className="btn btn-primary w-100" onClick={fetchPayouts}>
-                            🔍 ค้นหา
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div className="card p-3 shadow">
-                <h5>📋 รายจ่าย ประจำเดือน {THAI_MONTHS[selectedMonth - 1]} {selectedYear}</h5>
-                {loading ? (
-                    <div className="text-center py-3">⏳ กำลังโหลดข้อมูล...</div>
-                ) : (
-                    <table className="table table-hover">
-                    <thead className="table-dark">
-                        <tr>
-                            <th>วันที่</th>
-                            <th>ประเภท</th>
-                            <th>รายละเอียด</th>
-                            <th>จำนวนเงิน</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {payouts.length > 0 ? (
-                            payouts.map((payout) => (
-                                <tr 
-                                    key={`payout-${payout.id}`} 
-                                    onClick={() => {
-                                        setForm(payout);
-                                        setShowModal(true);
-                                    }}
-                                    style={{ cursor: "pointer" }}
-                                >
-                                    <td>{new Date(payout.payout_date).toLocaleDateString()}</td>
-                                    <td>{payout.payout_type}</td>
-                                    <td>{payout.description}</td>
-                                    <td>{parseFloat(payout.amount).toLocaleString("th-TH", { minimumFractionDigits: 2 })} ฿</td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="4" className="text-center text-muted">ไม่มีข้อมูลรายจ่าย</td>
-                            </tr>
-                        )}
-                    </tbody>
-                    {payouts.length > 0 && (
-                        <tfoot>
-                            <tr className="table-dark">
-                                <td colSpan="3" className="text-end fw-bold">รวม</td>
-                                <td className="fw-bold">{parseFloat(totalAmount).toLocaleString("th-TH", { minimumFractionDigits: 2 })} ฿</td>
-                            </tr>
-                        </tfoot>
-                    )}
-                </table>
-                )}
-            </div>
-            {showModal && (
+    {/* ✅ Modal แสดง/เพิ่ม/แก้ไขรายจ่าย */}
+ {showModal && (
                 <div className="modal show d-block" tabIndex="-1">
                     <div className="modal-dialog">
                         <div className="modal-content">
@@ -302,6 +336,7 @@ const Payouts = () => {
                                         <select className="form-control" value={form.payout_type} onChange={(e) => setForm({ ...form, payout_type: e.target.value })} required>
                                             <option value="">-- เลือกประเภท --</option>
                                             <option value="รายเดือน">รายเดือน</option>
+                                            <option value="ค่าส่งรองเท้า">ค่าส่งรองเท้า</option>
                                             <option value="อุปกรณ์-น้ำยา">อุปกรณ์-น้ำยา</option>
                                             <option value="อื่นๆ">อื่นๆ</option>
                                         </select>
@@ -352,10 +387,10 @@ const Payouts = () => {
                         </div>
                     </div>
                 </div>
-            )}
+    )}
+  </div>
+);
 
-        </div>
-    );
 };
 
 export default Payouts;

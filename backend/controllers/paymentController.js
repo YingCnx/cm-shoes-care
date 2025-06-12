@@ -35,7 +35,7 @@ export const createPayment = async (req, res) => {
 export const getPaymentByQueueId = async (req, res) => {
     try {
         const { queue_id } = req.params;
-        console.log("🔍 Fetching Payment for Queue ID:", queue_id);
+        //console.log("🔍 Fetching Payment for Queue ID:", queue_id);
 
         const payment = await Payment.getPaymentByQueueId(queue_id);
         if (!payment) {

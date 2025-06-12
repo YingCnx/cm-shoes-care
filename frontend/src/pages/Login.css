@@ -1,0 +1,61 @@
+/* ======= Employee Login UI Style - Soft UI ======= */
+
+.login-page {
+  height: 100vh;
+  background: #e0f7fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-card {
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 8px 8px 16px #cde0ec, -8px -8px 16px #ffffff;
+  width: 320px;
+  text-align: center;
+}
+
+.login-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #1e88e5;
+}
+
+.login-input {
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border: none;
+  border-radius: 12px;
+  background: #f9f9f9;
+  box-shadow: inset 2px 2px 5px #d6e2ef, inset -2px -2px 5px #ffffff;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.login-input:focus {
+  outline: none;
+  box-shadow: inset 2px 2px 6px #90caf9, inset -2px -2px 6px #ffffff;
+  background: #fff;
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(to right, #2196f3, #03a9f4);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 2px 2px 6px #90caf9, -2px -2px 6px #ffffff;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.login-button:hover {
+  transform: scale(1.03);
+}

@@ -52,7 +52,7 @@ class QueueItem {
      // ✅ ฟังก์ชันลบ queue_item ตาม item_id
      static async delete(queue_item_id) {
         try {
-            console.log("📌 Debug Params:", queue_item_id);  // ดูค่าที่ API ได้รับ
+            //console.log("📌 Debug Params:", queue_item_id);  // ดูค่าที่ API ได้รับ
             await pool.query(
                 `DELETE FROM queue_items WHERE id = $1`, 
                 [queue_item_id]

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { checkSession } from "../services/authService";
 import { getReports, getBranches } from "../services/api"; // API เรียกรายงานและดึงสาขา
 import { jwtDecode } from "jwt-decode";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -22,21 +23,19 @@ const ReportManagement = () => {
     const [selectedBranchName, setSelectedBranchName] = useState("");
     const [loading, setLoading] = useState(false); // ✅ สถานะโหลดข้อมูล
 
-    
-
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token) return;
+        const init = async () => {
+        const user = await checkSession();
+        if (!user) return;
 
-        try {
-            const user = jwtDecode(token);
-            setIsSuperAdmin(user.isSuperAdmin);
-            setSelectedBranch(user.isSuperAdmin ? "" : user.branch_id);
+        const isSuperAdmin = user.role === "superadmin";
+        setIsSuperAdmin(isSuperAdmin);
+        setSelectedBranch(isSuperAdmin ? "" : user.branch_id);
 
-            if (user.isSuperAdmin) fetchBranches();
-        } catch (error) {
-            console.error("🔴 Error decoding token:", error);
-        }
+        if (isSuperAdmin) fetchBranches();
+    };
+
+    init();
     }, []);
 
     const handleBranchChange = (e) => {
@@ -61,27 +60,36 @@ const ReportManagement = () => {
 
     const fetchReports = async () => {
         try {
-            if (!selectedReportType) return; // ✅ ไม่โหลดถ้ายังไม่เลือกประเภท
-            
-            setLoading(true); // ✅ เริ่มโหลดข้อมูล
-
-            const adjustedEndDate = new Date(endDate);
-                adjustedEndDate.setHours(23, 59, 59, 999); // ✅ เพิ่มเวลาให้เป็น 23:59:59
-
+            if (!selectedReportType) return;
+        
+            setLoading(true);
+        
+            // Convert startDate to a Date object
+            const start = new Date(startDate);
+            // Ensure the time component is set to the beginning of the day (00:00:00)
+            start.setHours(0, 0, 0, 0);
+            const startOfDayString = start.toLocaleDateString('en-CA') + ' ' + start.toLocaleTimeString('en-CA', { hour12: false });
+        
+            // Convert endDate to a Date object
+            const end = new Date(endDate);
+            // Ensure the time component is set to the end of the day (23:59:59.999)
+            end.setHours(23, 59, 59, 999);
+            const endOfDayString = end.toLocaleDateString('en-CA') + ' ' + end.toLocaleTimeString('en-CA', { hour12: false });
+        
             const res = await getReports({
-                branch_id: selectedBranch,
-                report_type: selectedReportType,
-                start_date: startDate,
-                end_date: adjustedEndDate.toISOString(),
+              branch_id: selectedBranch,
+              report_type: selectedReportType,
+              start_date: startOfDayString,
+              end_date: endOfDayString,
             });
-            
+        
             console.log("📌 Debug: Report Data", res.data);
             setReports(res.data);
-        } catch (error) {
+          } catch (error) {
             console.error("🔴 Error fetching reports:", error);
-        } finally {
-            setLoading(false); // ✅ หยุดโหลดข้อมูล
-        }
+          } finally {
+            setLoading(false);
+          }
     };
 
       // ✅ รีเซ็ตค่าทั้งหมดเมื่อเปลี่ยนประเภทของรายงาน

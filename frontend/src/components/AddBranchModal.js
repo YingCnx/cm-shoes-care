@@ -24,11 +24,11 @@ const AddBranchModal = ({ show, onClose, onSave, branchData }) => {
     if (!show) return null;
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content card shadow" style={{ backgroundColor: "#fff" }}>
+        <div className="add-branch-modal-overlay">
+            <div className="add-branch-modal-content card shadow" style={{ backgroundColor: "#fff" }}>
                 <h2 className="mb-3 text-start">{branchData ? "แก้ไขสาขา" : "เพิ่มสาขา"}</h2>
 
-                <div className="mb-2">
+                <div className="mb-2 ">
                     <label className="form-label">ชื่อสาขา</label>
                     <input type="text" className="form-control text-start w-100" placeholder="ชื่อสาขา"
                         value={name} onChange={(e) => setName(e.target.value)} />
@@ -46,12 +46,12 @@ const AddBranchModal = ({ show, onClose, onSave, branchData }) => {
                         value={phone} onChange={(e) => setPhone(e.target.value)} />
                 </div>
 
-                <div className="d-flex justify-content-start mt-3 gap-2">
+                <div className="d-flex justify-content-start mt-3 gap-5">
                     <button className="btn btn-secondary w-50" onClick={onClose}>
                         ❌ ปิด
                     </button>
                     <button className="btn btn-success w-50" onClick={handleSave}>
-                        ✅ {branchData ? "บันทึกการเปลี่ยนแปลง" : "เพิ่มสาขา"}
+                        ✅ {branchData ? "บันทึกการเปลี่ยนแปลง" : "บันทึก"}
                     </button>
                 </div>
             </div>

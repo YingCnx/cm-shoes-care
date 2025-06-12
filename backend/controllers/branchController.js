@@ -4,26 +4,21 @@ import pool from "../config/database.js";
 // 📌 1️⃣ ดึงรายชื่อสาขาทั้งหมด (เฉพาะ Admin)
 export const getBranches = async (req, res) => {
   try {
-    //console.log("📌 Debug: User Requesting Branches", req.user);
+    console.log("📌 Debug: User Requesting Branches", req.user);
 
-    // ✅ อนุญาตเฉพาะ SuperAdmin หรือ Employee ที่มี branch_id เท่านั้น
     if (!req.user.isSuperAdmin && !req.user.branch_id) {
       return res.status(403).json({ message: "Unauthorized access" });
     }
 
-    // ✅ SuperAdmin เห็นทุกสาขา
     let branches;
     if (req.user.isSuperAdmin) {
       branches = await Branch.getAll();
     } else {
-      // ✅ Employee เห็นเฉพาะสาขาของตัวเอง
-      branches = await Branch.getById(req.user.branch_id);
-    }
-
-    //console.log("📌 Debug: Branches Data", branches);
-    
-    if (!branches.length) {
-      return res.status(404).json({ message: "No branches found" });
+      const branch = await Branch.getById(req.user.branch_id);
+      if (!branch) {
+        return res.status(404).json({ message: "No branch found" });
+      }
+      branches = [branch]; // ✅ แปลงเป็น array เสมอ
     }
 
     res.json(branches);
@@ -32,6 +27,7 @@ export const getBranches = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 // 📌 2️⃣ ดึงข้อมูลสาขาเดี่ยว
@@ -95,14 +91,14 @@ export const deleteBranch = async (req, res) => {
   const branchId = req.params.id;
 
   try {
-      console.log(`📌 Debug: Checking references for branch ${branchId}`);
+      ///console.log(`📌 Debug: Checking references for branch ${branchId}`);
 
       // ✅ ตรวจสอบว่ามีการอ้างอิงใน appointments หรือ employees
       const checkAppointments = await pool.query("SELECT COUNT(*) FROM appointments WHERE branch_id = $1", [branchId]);
       const checkEmployees = await pool.query("SELECT COUNT(*) FROM employees WHERE branch_id = $1", [branchId]);
 
-      console.log(`📌 Debug: Appointments Count: ${checkAppointments.rows[0].count}`);
-      console.log(`📌 Debug: Employees Count: ${checkEmployees.rows[0].count}`);
+      //console.log(`📌 Debug: Appointments Count: ${checkAppointments.rows[0].count}`);
+      //console.log(`📌 Debug: Employees Count: ${checkEmployees.rows[0].count}`);
 
       if (checkAppointments.rows[0].count > 0 || checkEmployees.rows[0].count > 0) {
           console.error("🔴 Cannot delete branch: It has related records.");

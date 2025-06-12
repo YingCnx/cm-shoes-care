@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../assets/css/bootstrap.min.css";
+import "./PaymentModal.css";
+
 
 const PaymentModal = ({ show, onClose, onConfirm, serviceSummary }) => {
     const [discount, setDiscount] = useState(0);
@@ -22,8 +24,8 @@ const PaymentModal = ({ show, onClose, onConfirm, serviceSummary }) => {
     const totalAmount = totalPrice - discount < 0 ? 0 : totalPrice - discount;
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
+        <div className="payment-modal-overlay">
+            <div className="payment-modal-content">
                 <h2>💰 สรุปการชำระเงิน</h2>
                 <h6 className="text-danger" style={{ fontSize: '0.75rem' }}>
                     *เมื่อคุณชำระเงินแล้ว คุณจะไม่สามารถแก้ไขข้อมูลใดๆได้อีก 

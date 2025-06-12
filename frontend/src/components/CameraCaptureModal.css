@@ -1,0 +1,38 @@
+/* กล่อง modal ทั้งหน้าจอ */
+.camera-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+/* กล่องกล้อง */
+.camera-modal-body {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 100%;
+    width: 400px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* วิดีโอกล้อง */
+.camera-video {
+    width: 100%;
+    border-radius: 8px;
+    border: 2px solid #007bff;
+    background: #000;
+}
+
+/* ปุ่มด้านล่าง */
+.camera-modal-body button {
+    width: 45%;
+}

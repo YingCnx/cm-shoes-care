@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "../assets/css/bootstrap.min.css";
+import "./AddExpenseModal.css";
 
 const AddExpenseModal = ({ show, onClose, onAddExpense }) => {
     const [expense, setExpense] = useState({ description: "", amount: "" });
@@ -24,8 +25,8 @@ const AddExpenseModal = ({ show, onClose, onAddExpense }) => {
     if (!show) return null;
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
+        <div className="add-expense-modal-overlay">
+            <div className="add-expense-modal-content">
                 <h2>💰 เพิ่มค่าใช้จ่าย</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
@@ -55,8 +56,8 @@ const AddExpenseModal = ({ show, onClose, onAddExpense }) => {
                             required
                         />
                     </div>
-                    <div className="modal-actions d-flex justify-content-end">
-                        <button type="button" className="btn btn-secondary me-2" onClick={onClose}>❌ ปิด</button>
+                    <div className="modal-actions">
+                        <button type="button" className="btn btn-danger" onClick={onClose}>❌ ปิด</button>
                         <button type="submit" className="btn btn-success">✅ เพิ่มค่าใช้จ่าย</button>
                     </div>
                 </form>

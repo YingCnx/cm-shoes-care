@@ -90,8 +90,8 @@ const AddEmployeeModal = ({ show, onClose, onSave, employeeData }) => {
     if (!show) return null;
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content card shadow" style={{ backgroundColor: "#fff" }}>
+        <div className="add-employee-modal-overlay">
+            <div className="add-employee-modal-content card p-4 card shadow" style={{ backgroundColor: "#fff" }}>
                 <h2 className="mb-3 text-start">{employeeData ? "แก้ไขพนักงาน" : "เพิ่มพนักงาน"}</h2>
 
                 {error && <p className="alert alert-danger">{error}</p>} {/* ✅ แสดง Error ถ้ามี */}
@@ -150,7 +150,7 @@ const AddEmployeeModal = ({ show, onClose, onSave, employeeData }) => {
                         ❌ ปิด
                     </button>
                     <button className="btn btn-success w-50" onClick={handleSave}>
-                        ✅ {employeeData ? "บันทึก" : "เพิ่มพนักงาน"}
+                        ✅ {employeeData ? "บันทึก" : "บันทึก"}
                     </button>
                 </div>
             </div>

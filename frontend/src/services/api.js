@@ -3,16 +3,18 @@ import axios from 'axios';
 // ✅ ตั้งค่า API Base URL
 const API = axios.create({
   baseURL: 'http://localhost:5000/api',
+  withCredentials: true, 
+  
 });
 
 // ✅ ดึง Token จาก localStorage และใส่ใน Header
-API.interceptors.request.use((config) => {
+/* API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
-}, (error) => Promise.reject(error));
+}, (error) => Promise.reject(error)); */
 
 //======================= 🏢 AUTH =======================//
 // ✅ ล็อกอิน
@@ -51,8 +53,7 @@ export const getQueueDetail = (id) => API.get(`/queue/${id}`);
 export const updateQueueStatus = (id, status, total_price) => API.put(`/queue/${id}/status`, { status, total_price });
 export const deleteQueue = (id) => API.delete(`/queue/${id}`);
 // ✅ อัปเดตรายละเอียดคิว (เพิ่ม-ลบ บริการ)
-export const updateQueue = async (id, updatedData) => {
-  console.log("📌 Debug: Sending to API", `/queue/${id}`, updatedData);
+export const updateQueue = async (id, updatedData) => {  
   return API.put(`/queue/${id}`, updatedData);
 };
 //======================= 👟 QUEUE ITEMS =======================//
@@ -166,12 +167,46 @@ export const getEmployees = (branch_id = null) => API.get("/employees", { params
 export const createEmployee = (data) => API.post("/employees", data);
 export const updateEmployee = (id, data) => API.put(`/employees/${id}`, data);
 export const deleteEmployee = (id) => API.delete(`/employees/${id}`);
+//======================= 👥 CUSTOMERS =======================//
+
+export const getCustomers = (branch_id = null) => API.get("/customers", { params: { branch_id } });
+export const createCustomer = (data) => API.post("/customers", data);
+export const updateCustomer = (id, data) => API.put(`/customers/${id}`, data);
+export const deleteCustomer = (id) => API.delete(`/customers/${id}`);
+export const checkDuplicatePhone = (phone, branch_id) => API.get(`/customers/check-duplicate`, { params: { phone, branch_id } });
+
 
 //======================= 👥 PAYOUTS =======================//
 export const getPayouts = (params) => API.get("/payouts", { params });
 export const createPayout = (data) => API.post("/payouts", data);
 export const updatePayout = (id, data) => API.put(`/payouts/${id}`, data);
 export const deletePayout = (id) => API.delete(`/payouts/${id}`);
+
+//======================= 🔒 Lockers =======================//
+export const getLockers = (branch_id) => API.get("/lockers", { params: { branch_id } });
+export const createLocker = (data) => API.post("/lockers", data);
+export const updateLockerStatus = (id, data) => API.put(`/lockers/${id}/status`, data);
+export const updateLocker = (id, data) => API.put(`/lockers/${id}`, data);
+export const deleteLocker = (id) => API.delete(`/lockers/${id}`);
+
+
+
+export const getLockerSlots = (lockerId) =>
+  API.get(`/lockers/${lockerId}/slots`);
+
+export const updateSlotStatus = (slotId, status) =>
+  API.put(`/lockers/slots/${slotId}`, { status });
+
+// ดึงรายการฝากรองเท้าที่ยังไม่ถูกรับจากสาขา
+export const getPendingLockerDrops = (branchId) =>
+  API.get(`/locker-drop/pending`, {
+    params: { branch_id: branchId },
+  });
+
+// อัปเดตสถานะของ locker_drop เช่น 'received', 'cancelled'
+export const updateLockerDropStatus = (dropId, status) =>
+  API.put(`/locker-drop/${dropId}/status`, { status });
+
 
 
 //======================= 👥 Reports =======================//
@@ -180,3 +215,12 @@ export const getReports = ({ branch_id, report_type, start_date, end_date }) => 
       params: { branch_id, report_type, start_date, end_date },
   });
 };
+
+//======================= 👥 Systems =======================//
+export const logout = () => API.post("/auth/logout");
+
+export const backupdb = () => API.get("/backup", { responseType: "blob" })
+
+
+
+export default API;

@@ -1,0 +1,89 @@
+.announce-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.announce-modal {
+  background: white;
+  width: 90%;
+  max-width: 600px;
+  border-radius: 12px;
+  border: 3px solid #ffc107;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0,0,0,0.25);
+  animation: slideDown 0.3s ease-out;
+}
+
+.announce-modal-header {
+  background-color: #ffc107;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.announce-modal-title {
+  margin: 0;
+  font-weight: bold;
+}
+
+.announce-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.announce-modal-close:hover {
+  background: none; /* ✅ ยกเลิกพื้นหลังสี */
+  color: #DCDCDC;    /* หรือใส่สีแดง หรือสีอื่นแทน */
+}
+
+.announce-modal-body {
+  padding: 20px;
+  font-size: 18px;
+  text-align: center;
+  color: #333;
+}
+
+.announce-modal-footer {
+  padding: 16px;
+  text-align: center;
+}
+
+.announce-modal-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  font-size: 16px;
+  padding: 10px 30px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+
+.announce-modal-button:hover {
+  background-color: #218838;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-30%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}

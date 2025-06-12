@@ -1,0 +1,89 @@
+
+/* ======= CM Shoes Care PayoutAdmin CSS - Soft UI Style ======= */
+
+.payout-container {
+  max-width: 100%;
+  margin: auto;
+  padding: 20px;
+  color: #333;
+  font-family: 'Prompt', sans-serif;
+}
+
+/* --- Wrapper Card --- */
+.queue-card-wrapper {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 3px 3px 6px #cdd7e4;
+  margin-bottom: 20px;
+  border: none;
+}
+
+/* --- ปุ่มเพิ่มรายการแบบ btn-split --- */
+.btn-split {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: #1976d2;
+}
+
+.btn-text {
+  background-color: #2196f3;
+  color: #fff;
+  padding: 12px 20px;
+}
+
+.btn-icon {
+  background-color: #1976d2;
+  color: #fff;
+  padding: 12px 16px;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-split:hover {
+  background-color: #1565c0;
+}
+
+.btn-split:hover .btn-text,
+.btn-split:hover .btn-icon {
+  background-color: #1565c0;
+}
+
+/* --- ตาราง --- */
+.table th {
+  padding: 16px;
+  font-weight: 600;
+  font-size: 16px;
+  text-align: left;
+  background-color: #f5f6f7;
+}
+
+.table td {
+  padding: 16px;
+  font-size: 16px;
+  text-align: left;
+}
+
+/* --- Filter Label --- */
+.form-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .table th, .table td {
+    font-size: 13px;
+    padding: 12px;
+  }
+}

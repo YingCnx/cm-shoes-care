@@ -1,21 +1,22 @@
-.modal-overlay {
-    position: fixed;
+.add-employee-modal-overlay {
+    position: fixed; /* ✅ เปลี่ยนเป็น fixed */
     top: 0;
-    left: 0; /* ✅ ชิดซ้าย */
+    left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
-    justify-content: flex-start; /* ✅ ชิดซ้าย */
-    align-items: flex-start; /* ✅ Modal อยู่ด้านบน */
-    padding-top: 20px; /* เพิ่มระยะห่างด้านบน */
-    z-index: 999;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
-.modal-content {
+.add-employee-modal-content {
     background: white;
-    width: 400px; /* ✅ ขนาดของ Modal */
+    width: 500px;
     max-width: 90%;
     border-radius: 10px;
     padding: 20px;
 }
+
+

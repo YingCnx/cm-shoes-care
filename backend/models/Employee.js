@@ -64,7 +64,7 @@ class Employee {
                 [name, email, phone, role, branch_id, id]
             );
     
-            console.log("✅ Update Result:", result.rows);
+            //console.log("✅ Update Result:", result.rows);
     
             return result.rows[0] || null;
         } catch (err) {
@@ -77,12 +77,12 @@ class Employee {
     // 📌 ลบพนักงาน
     static async delete(id) {
         try {
-            console.log("🔍 Checking if employee exists:", id);
+            //console.log("🔍 Checking if employee exists:", id);
     
             // ✅ ตรวจสอบว่ามีพนักงานก่อนลบ
             const result = await pool.query("DELETE FROM employees WHERE id = $1 RETURNING *", [id]);
     
-            console.log("✅ Employee deleted:", result.rows[0]); // Log เพื่อ debug
+            ////console.log("✅ Employee deleted:", result.rows[0]); // Log เพื่อ debug
             return result.rows[0] || null;
         } catch (err) {
             console.error("🔴 Database Error:", err);

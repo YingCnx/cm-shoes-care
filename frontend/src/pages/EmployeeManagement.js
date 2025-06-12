@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getEmployees, createEmployee, updateEmployee, deleteEmployee, getBranches } from "../services/api";
 import { jwtDecode } from "jwt-decode";
 import AddEmployeeModal from "../components/AddEmployeeModal";
+import { checkSession } from "../services/authService";
 import "../assets/css/bootstrap.min.css";
 import './EmployeeManagement.css';
 
@@ -18,28 +19,27 @@ const EmployeeManagement = () => {
 
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token) {
-            navigate("/login");
-            return;
+    const init = async () => {
+        const user = await checkSession();
+        if (!user) {
+        setTimeout(() => navigate("/login"), 0);
+        return;
         }
 
-        try {
-            const user = jwtDecode(token);
-            setIsSuperAdmin(user.isSuperAdmin);
-            setEmployeeId(user.id);
-            setSelectedBranch(user.isSuperAdmin ? null : user.branch_id);
+        const isSuperAdmin = user.role === "superadmin";
+        setIsSuperAdmin(isSuperAdmin);
+        setEmployeeId(user.id);
+        setSelectedBranch(isSuperAdmin ? null : user.branch_id);
 
-            if (user.isSuperAdmin) {
-                fetchBranches();
-            } else {
-                fetchEmployees(user.branch_id);
-            }
-        } catch (error) {
-            console.error("🔴 Error decoding token:", error);
-            navigate("/login");
+        if (isSuperAdmin) {
+        fetchBranches();
+        } else {
+        fetchEmployees(user.branch_id);
         }
-    }, []);
+    };
+
+    init();
+    }, [navigate]);
 
     useEffect(() => {
         if (selectedBranch !== null) {

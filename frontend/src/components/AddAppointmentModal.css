@@ -1,24 +1,23 @@
-.modal-overlay {
+.add-appointment-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
     background: rgba(0, 0, 0, 0.5);
-    display: flex; 
-    justify-content: center; /* ✅ ทำให้ Modal อยู่ตรงกลางแนวนอน */
-    align-items: center; /* ✅ ทำให้ Modal อยู่ตรงกลางแนวตั้ง */
+    display: flex;
+    justify-content: center;
+    align-items: center;
     z-index: 1050;
 }
 
-
-.modal-content {
+.add-appointment-modal-content {
     background: rgb(255, 255, 255);
     width: 450px;
     max-width: 90%;
     border-radius: 10px;
     padding: 20px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-    position: relative; /* ✅ ต้องมี position: relative เพื่อให้ flexbox ทำงานได้ถูกต้อง */
+    position: relative;
 }
 

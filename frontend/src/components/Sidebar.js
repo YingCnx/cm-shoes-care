@@ -1,109 +1,135 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { jwtDecode } from "jwt-decode"; // ✅ ใช้ jwtDecode ตรวจสอบสิทธิ์
-import { getBranchesById } from "../services/api"; // ✅ Import API
-import "./Sidebar.css"; // ✅ ใช้ CSS สำหรับแสดง/ซ่อนเมนู
+import { getBranchesById } from "../services/api";
+import { logout, checkSession } from "../services/authService";
+import {
+  FaTachometerAlt,
+  FaListUl,
+  FaCalendarAlt,
+  FaMoneyBillWave,
+  FaTools,
+  FaUserFriends,
+  FaChartBar,
+  FaUsersCog,
+  FaBuilding,
+  FaUserTie,
+  FaCreditCard,
+  FaBars,
+  FaTimes
+} from "react-icons/fa";
+import "./Sidebar.css";
 
 const Sidebar = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-    const [userName, setUserName] = useState("");
-    const [role, setRole] = useState("");
-    const [branchId, setBranchId] = useState(null);
-    const [branchName, setBranchName] = useState("");
-    const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [role, setRole] = useState("");
+  const [branchId, setBranchId] = useState(null);
+  const [branchName, setBranchName] = useState("");
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (token) {
-            try {
-                const user = jwtDecode(token);
-                setIsSuperAdmin(user.isSuperAdmin);
-                setUserName(user.email || "ไม่ทราบชื่อ");
-                setRole(user.isSuperAdmin ? "SuperAdmin" : "Employee");
+  useEffect(() => {
+    const fetchSession = async () => {
+      const user = await checkSession();
+      if (!user) {
+        setTimeout(() => navigate("/login"), 0);
+        return;
+      }
 
-                if (!user.isSuperAdmin) {
-                    setBranchId(user.branch_id); // ✅ กำหนด branchId ถ้าเป็น Employee
-                }
-            } catch (error) {
-                console.error("🔴 Error decoding token:", error);
-                localStorage.removeItem("token");
-                navigate("/login");
-            }
-        } else {
-            navigate("/login");
-        }
-    }, [navigate]);
+      setIsSuperAdmin(user.role === "superadmin");
+      setUserName(user.email || "ไม่ทราบชื่อ");
+      setRole(user.role === "superadmin" ? "SuperAdmin" : "Employee");
 
-    useEffect(() => {
-        if (branchId) {
-            fetchBranchName(branchId);
-        }
-    }, [branchId]); // ✅ ใช้ useEffect ให้ดึง branchName เมื่อ branchId มีค่า
-
-    const fetchBranchName = async (branchId) => {
-        try {
-            const res = await getBranchesById(branchId);
-            setBranchName(res.data.name || "ไม่พบข้อมูล");
-        } catch (error) {
-            console.error("🔴 Error fetching branch name:", error);
-            setBranchName("ไม่พบข้อมูล");
-        }
+      if (user.role !== "superadmin") {
+        setBranchId(user.branch_id);
+      }
     };
+    fetchSession();
+  }, [navigate]);
 
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        navigate("/login");
-    };
+  useEffect(() => {
+    if (branchId) {
+      fetchBranchName(branchId);
+    }
+  }, [branchId]);
 
-    return (
-        <div className={`sidebar-container ${isOpen ? "open" : ""}`}>
-            {/* ปุ่ม Toggle เมนู */}
-            <button className="menu-toggle" onClick={() => setIsOpen(!isOpen)}>
-                {isOpen ? "❌ ปิด" : "☰ เมนู"}
-            </button>
-            <br />
+  const fetchBranchName = async (branchId) => {
+    try {
+      const res = await getBranchesById(branchId);
+      setBranchName(res.data.name || "ไม่พบข้อมูล");
+    } catch (error) {
+      setBranchName("ไม่พบข้อมูล");
+    }
+  };
 
-            {/* ✅ เมนูด้านข้าง */}
-            <div className="sidebar">
-                
+  const handleLogout = async () => {
+    try {
+      await logout();
+      window.location.href = "/login";
+    } catch (err) {
+      alert("❌ Logout ไม่สำเร็จ");
+    }
+  };
 
-                <h2>🔹 เมนูหลัก</h2>
-                <ul>
-                    <li><Link to="/Dashboard">🏠 หน้าหลัก</Link></li>
-                    <li><Link to="/queue">📋 จัดการคิวงาน</Link></li>
-                    <li><Link to="/appointments">📅 จัดการนัดหมาย</Link></li>
-                    <li><Link to="/payouts">💸 บันทึกรายจ่าย</Link></li>
-                    <li><Link to="/services">🛠 บริการ</Link></li>
-                    <li><Link to="/employee">👥 จัดการพนักงาน</Link></li>
-                    <li><Link to="/reports">📊 รายงาน</Link></li>
+  return (
+    <div className={`sidebar-container ${isOpen ? "open" : ""}`}>
+      <button className="sidebar-toggle" onClick={() => setIsOpen(!isOpen)}>
+        {isOpen ? <FaTimes /> : <FaBars />}
+      </button>
 
-                    {/* ✅ เมนูพิเศษสำหรับ SuperAdmin เท่านั้น */}
-                    {isSuperAdmin && (
-                        <>
-                            
-                            <li><Link to="/branch">🏢 จัดการสาขา</Link></li>
-                            <li><Link to="/users">🧑‍💼 ผู้ใช้งาน</Link></li>
-                            <li><Link to="/payments">💳 ชำระเงิน*ยังใช้ไม่ได้</Link></li>
-                        </>
-                    )}
-                </ul>
-           
-                {/* ✅ แสดงข้อมูลผู้ใช้ */}
-                <div className="user-info">
-                    <h6>👤 {userName}</h6>
-                    <p>📌 ตำแหน่ง: <strong>{role}</strong></p>
-                    {!isSuperAdmin && <p>🏢 สาขา: <strong>{branchName}</strong></p>}
-                </div>
-                
+      <div className="sidebar">
+        <div>
+          <h2 className="sidebar-section-title">เมนูหลัก</h2>
+          <ul>
+            <li><Link to="/dashboard"><FaTachometerAlt className="sidebar-icon" />{isOpen && <span className="sidebar-text">หน้าหลัก</span>}</Link></li>
+            <li><Link to="/queue"><FaListUl className="sidebar-icon" />{isOpen && <span className="sidebar-text">จัดการคิวงาน</span>}</Link></li>
+            <li><Link to="/appointments"><FaCalendarAlt className="sidebar-icon" />{isOpen && <span className="sidebar-text">จัดการนัดหมาย</span>}</Link></li>
+            <li><Link to="/customers"><FaUserFriends className="sidebar-icon" />{isOpen && <span className="sidebar-text">ลูกค้า</span>}</Link></li>
+          </ul>
+          <br />
 
-                {/* ✅ ปุ่มออกจากระบบ */}
-                <button className="logout-button" onClick={handleLogout}>
-                    🚪 ออกจากระบบ
-                </button>
-            </div>
+          <h2 className="sidebar-section-title">งานรอง</h2>
+          <ul>
+            <li><Link to="/services"><FaTools className="sidebar-icon" />{isOpen && <span className="sidebar-text">บริการ</span>}</Link></li>
+            <li><Link to="/payouts"><FaMoneyBillWave className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายจ่าย</span>}</Link></li>
+            <li><Link to="/reports"><FaChartBar className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายงาน</span>}</Link></li>
+          </ul>
+          <br />
+
+          <h2 className="sidebar-section-title">Smart Locker</h2>
+          <ul>
+            <li><Link to="/lockers/pending-pickup"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายการรอรับจากตู้</span>}</Link></li>
+            <li><Link to="/lockers/receive"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รับเข้าจาก Locker</span>}</Link></li>
+            <li><Link to="/returntolocker"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">ส่งคืน Locker</span>}</Link></li>
+            <li><Link to="/lockers"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายการ Locker</span>}</Link></li>
+          </ul>
+
+          {isSuperAdmin && (
+            <>
+              <h2 className="sidebar-section-title">สำหรับผู้ดูแล</h2>
+              <ul>
+                <li><Link to="/employee"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">พนักงาน</span>}</Link></li>
+                <li><Link to="/branch"><FaBuilding className="sidebar-icon" />{isOpen && <span className="sidebar-text">สาขา</span>}</Link></li>
+                <li><Link to="/users"><FaUserTie className="sidebar-icon" />{isOpen && <span className="sidebar-text">ผู้ใช้งาน</span>}</Link></li>
+                <li><Link to="/payments"><FaCreditCard className="sidebar-icon" />{isOpen && <span className="sidebar-text">ชำระเงิน*</span>}</Link></li>
+              </ul>
+            </>
+          )}
         </div>
-    );
+
+        {isOpen && (
+          <div className="user-info">
+            <h6>User: {userName}</h6>
+            <p>ตำแหน่ง: <strong>{role}</strong></p>
+            {!isSuperAdmin && <p>สาขา: <strong>{branchName}</strong></p>}
+            <button className="logout-button" onClick={handleLogout}>
+              🚪 ออกจากระบบ
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default Sidebar;

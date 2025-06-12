@@ -8,20 +8,23 @@ import { createCanvas } from 'canvas';
 // ✅ 1️⃣ เพิ่มคิวใหม่
 export const createQueue = async (req, res) => {
   try {
-      const { customer_name, phone, location, total_pairs, delivery_date, branch_id } = req.body;
+      const {customer_id, customer_name, phone, location, total_pairs, received_date, delivery_date, branch_id, source } = req.body;
 
-      if (!customer_name || !phone || !total_pairs || !delivery_date || !branch_id) {
+      if (!customer_id || !customer_name || !phone || !total_pairs|| !received_date || !delivery_date || !branch_id) {
           return res.status(400).json({ message: "❌ กรุณากรอกข้อมูลให้ครบถ้วน" });
       }
 
       const queue_id = await Queue.create({
+          customer_id,
           customer_name,
           phone,
           location,
           total_pairs,
           total_price: 0, // ✅ ให้ default เป็น 0
+          received_date,
           delivery_date,
-          branch_id
+          branch_id,
+          source
       });
 
       res.status(201).json({ message: "✅ คิวถูกสร้างเรียบร้อย", queue_id });
@@ -71,6 +74,26 @@ export const getQueueById = async (req, res) => {
   }
 };
 
+export const updateQueue = async (req, res) => {
+  const { id } = req.params;
+  const { location, total_pairs, received_date, delivery_date } = req.body;
+    // ✅ เพิ่ม debug ชัด ๆ
+  console.log("📥 id:", id);
+  console.log("📥 body:", req.body);
+
+  if (!location || !received_date || !delivery_date || total_pairs === undefined) {
+    return res.status(400).json({ error: "ข้อมูลไม่ครบ" }); // 🔥 <-- มาจากตรงนี้แน่
+  }
+
+  try {
+    const result = await Queue.updateQueue(id, location, total_pairs, received_date, delivery_date) ;
+    res.json(result);
+  } catch (error) {
+    console.error("🔴 Error updating queue:", error.message);
+    res.status(500).json({ message: error.message });
+  } 
+};
+
 // ✅ 4️⃣ อัปเดตสถานะคิว
 export const updateQueueStatus = async (req, res) => {
   const { status, total_price } = req.body;
@@ -86,7 +109,6 @@ export const updateQueueStatus = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 
 // ✅ 5️⃣ ลบคิว
@@ -108,13 +130,9 @@ const formatDate = (date) => {
   return `${day}/${month}/${year}`;
 };
 
-//สร้างใบแจ้งราคา
 export const generateInvoice = async (req, res) => {
   try {
       const queue_id = req.params.queue_id;
-      //console.log("📌 Debug: queue_id =", queue_id);
-
-      // ✅ ดึงข้อมูล Queue และ Expense จาก Database
       const queue = await Queue.getById(queue_id);
       const expenses = await Expense.getById(queue_id);
 
@@ -122,45 +140,20 @@ export const generateInvoice = async (req, res) => {
           return res.status(404).json({ message: "ไม่พบคิวนี้ในระบบ" });
       }
 
-      //console.log("✅ Queue Data:", queue);
-      //console.log("✅ Expenses Data:", expenses);
-
       const totalPrice = parseFloat(queue.total_price) || 0;
-
-      // ✅ ตรวจสอบโฟลเดอร์ `public/invoices`
-      const invoiceDir = path.join(process.cwd(), 'public/invoices');
-      if (!fs.existsSync(invoiceDir)) {
-          fs.mkdirSync(invoiceDir, { recursive: true });
-      }
-
-      // ✅ กำหนด Path ของไฟล์ใบแจ้งราคา
-      const invoicePath = path.join(invoiceDir, `invoice_${queue_id}.png`);
-
-      // ✅ ถ้ามีไฟล์อยู่แล้วให้ลบทิ้งก่อน
-      if (fs.existsSync(invoicePath)) {
-          fs.unlinkSync(invoicePath);
-          //console.log(`🔄 Deleted old invoice: ${invoicePath}`);
-      }
 
       // ✅ สร้าง Canvas
       const canvas = createCanvas(600, 1000);
       const ctx = canvas.getContext('2d');
 
-      // ✅ ตั้งค่าพื้นหลังสีขาว
+      // วาดใบแจ้งราคา (เหมือนเดิม)
       ctx.fillStyle = 'white';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // ✅ ตั้งค่าฟอนต์ภาษาไทย
       ctx.fillStyle = 'black';
       ctx.font = '28px "Noto Sans Thai"';
-
-      // ✅ ใส่หัวข้อใบแจ้งราคา
-      // ✅ ใส่หัวข้อใบแจ้งราคา
       ctx.fillText('🏠 ร้านซักเกิบแอนด์สปา', 150, 50);
       ctx.font = '24px "Noto Sans Thai"';
-      ctx.fillText(`📍 สาขา: ${queue.branch_name}`, 150, 80);  // ✅ แสดงชื่อสาขา
-
-      // ✅ รายละเอียดลูกค้า
+      ctx.fillText(`📍 สาขา: ${queue.branch_name}`, 150, 80);
       ctx.font = 'bold 24px "Noto Sans Thai"';
       ctx.fillText(`📜 ใบแจ้งราคา`, 50, 130);
       ctx.font = '22px "Noto Sans Thai"';
@@ -168,29 +161,19 @@ export const generateInvoice = async (req, res) => {
       ctx.fillText(`👤 ลูกค้า: ${queue.customer_name}`, 50, 200);
       ctx.fillText(`📞 เบอร์โทร: ${queue.phone}`, 50, 230);
       ctx.fillText(`📅 วันที่: ${formatDate(new Date())}`, 50, 260);
-
-      // ✅ เส้นแบ่ง
       ctx.fillText(`-------------------------------------------------`, 50, 290);
-
-      // ✅ รายการบริการ
       ctx.font = 'bold 22px "Noto Sans Thai"';
       ctx.fillText(`📌 รายการบริการ:`, 50, 320);
       ctx.font = '22px "Noto Sans Thai"';
-      
       let startY = 360;
       queue.queue_items.forEach((item, index) => {
-          ctx.fillText(`${index + 1}. ${item.brand} ${item.model} สี${item.color} - ${item.price_per_pair} บาท`, 50, startY);
+          ctx.fillText(`${index + 1}. ${item.brand} ${item.model} ${item.color} - ${item.price_per_pair} บาท`, 50, startY);
           startY += 40;
       });
-
-      // ✅ เส้นแบ่ง
       ctx.fillText(`-------------------------------------------------`, 50, startY + 10);
-
-      // ✅ รายการค่าใช้จ่ายเพิ่มเติม
       ctx.font = 'bold 22px "Noto Sans Thai"';
       ctx.fillText(`💰 ค่าใช้จ่ายเพิ่มเติม:`, 50, startY + 40);
       ctx.font = '22px "Noto Sans Thai"';
-
       startY += 80;
       if (expenses.length > 0) {
           expenses.forEach((expense, index) => {
@@ -201,27 +184,21 @@ export const generateInvoice = async (req, res) => {
           ctx.fillText("ไม่มีค่าใช้จ่ายเพิ่มเติม", 50, startY);
           startY += 40;
       }
-
-      // ✅ รวมยอด
       ctx.font = 'bold 24px "Noto Sans Thai"';
       ctx.fillText(`💰 รวมทั้งหมด: ${totalPrice.toFixed(2)} บาท`, 50, startY + 40);
-
-      // ✅ เพิ่มข้อความแจ้งเตือน
       ctx.fillText(`⚠️ กรุณาชำระเงินก่อนรับสินค้า`, 50, startY + 100);
 
-      // ✅ บันทึกเป็นไฟล์ PNG (บันทึกทับไฟล์เดิม)
+      // ✅ ส่ง base64 กลับ (ไม่สร้างไฟล์)
       const buffer = canvas.toBuffer('image/png');
-      fs.writeFileSync(invoicePath, buffer);
+      const base64Image = buffer.toString('base64');
 
-      //console.log("✅ Invoice created at:", invoicePath);
-
-      const BASE_URL = process.env.BASE_URL || "http://localhost:5000";
-      res.json({ image_url: `${BASE_URL}/public/invoices/invoice_${queue_id}.png` });
+      res.json({ image_base64: `data:image/png;base64,${base64Image}` });
 
   } catch (error) {
       console.error("🔴 Error generating invoice:", error);
       res.status(500).json({ message: "เกิดข้อผิดพลาดในการสร้างใบแจ้งราคา" });
   }
 };
+
 
 

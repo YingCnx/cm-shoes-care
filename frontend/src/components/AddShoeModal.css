@@ -1,24 +1,31 @@
-
-.modal-overlay {
+/* AddShoeModal.css */
+.add-shoe-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 1000;
 }
 
-.modal-content {
-    background: white;
-    width: 600px;
-    max-width: 90%;
-    border-radius: 10px;
+.add-shoe-modal-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
 }
 
-.img-thumbnail {
-    border-radius: 10px;
-    object-fit: cover;
+.add-shoe-modal-content {
+    background-color: #fff;
+    max-width: 700px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
 }
+

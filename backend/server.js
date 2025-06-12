@@ -2,6 +2,67 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import https from 'https';
+import cookieParser from 'cookie-parser';
+
+// ✅ โหลด environment variables
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// ✅ Logging Request ก่อน routing
+app.use((req, res, next) => {
+  console.log(`🌍 Client IP: ${req.ip}`);
+  console.log(`📝 Headers:`, req.headers);
+  next();
+});
+
+// ✅ Middleware พื้นฐาน
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(helmet());
+
+// ✅ กำหนด CORS แบบเฉพาะ origin + credentials
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://app.suggerb.com",
+  "https://app.suggerb.com",
+  "149.56.87.48"
+];
+
+  app.use((req, res, next) => {
+    const allowedOrigins = [
+      "http://localhost:3000",
+      "http://app.suggerb.com",
+      "https://app.suggerb.com"
+    ];
+    const origin = req.headers.origin;
+
+    if (allowedOrigins.includes(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin); // ✅ ใช้ตัวเดียวเท่านั้น
+      res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ สำคัญมาก
+    }
+
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(200);
+    }
+
+    next();
+  });
+
+// ✅ โหลด static files และจัดการ Cross-Origin Policy
+const setCORSHeaders = (res, path) => {
+  res.set("Cross-Origin-Resource-Policy", "cross-origin");
+};
+
+app.use("/uploads", express.static("uploads", { setHeaders: setCORSHeaders }));
+app.use("/public", express.static("public", { setHeaders: setCORSHeaders }));
 
 // ✅ นำเข้า Routes
 import authRoutes from './routes/auth.js';
@@ -12,34 +73,15 @@ import serviceRoutes from './routes/services.js';
 import paymentRoutes from './routes/payment.js';
 import employeeRoutes from './routes/employee.js';
 import branchesRoutes from './routes/branch.js';
+import customerRoutes from "./routes/customer.js";
 import expenseRoutes from './routes/expense.js';
 import reportRoutes from "./routes/report.js";
 import payoutRoutes from "./routes/payout.js";
-import lineWebhook from './routes/lineWebhook.js';
+import LockersRoutes from "./routes/lockerRoutes.js";
+import backupRoutes from "./routes/backup.js";
+import lockerDropRoutes from "./routes/lockerDropRoutes.js";
 
-dotenv.config();
-
-const app = express();
-
-// ✅ Middleware
-app.use(express.json());
-app.use(cors({ 
-  origin: "*", 
-  methods: ["GET", "POST", "PUT", "DELETE"], 
-  allowedHeaders: ["Content-Type", "Authorization"] 
-}));
-app.use(helmet());
-app.use(express.urlencoded({ extended: true }));
-
-// ✅ จัดการ Static Files (`uploads` และ `public`)
-const setCORSHeaders = (res, path) => {
-  res.set("Cross-Origin-Resource-Policy", "cross-origin");
-};
-
-app.use("/uploads", express.static("uploads", { setHeaders: setCORSHeaders }));
-app.use("/public", express.static("public", { setHeaders: setCORSHeaders }));
-
-// ✅ Routes
+// ✅ เชื่อม Route หลัก
 app.use('/api/auth', authRoutes);
 app.use('/api/appointments', appointmentsRoutes);
 app.use('/api/queue', queueRoutes);
@@ -48,22 +90,37 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/branches', branchesRoutes);
+app.use("/api/customers", customerRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/payouts", payoutRoutes);
 app.use("/api/reports", reportRoutes);
-app.use('/line', lineWebhook);
+app.use("/api/lockers", LockersRoutes);
+app.use("/api/backup", backupRoutes);
+app.use("/locker-drop", lockerDropRoutes);
 
-// ✅ Global Error Handling Middleware
+// ✅ Global Error Handler
 app.use((err, req, res, next) => {
   console.error("🔥 Server Error:", err);
   res.status(500).json({ message: "Internal Server Error" });
 });
 
-// ✅ Server Start
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+// ✅ รองรับ HTTPS และ fallback ไป HTTP ถ้า cert ไม่มี
+if (fs.existsSync("./certs/key.pem") && fs.existsSync("./certs/cert.pem")) {
+  const httpsOptions = {
+    key: fs.readFileSync("./certs/key.pem"),
+    cert: fs.readFileSync("./certs/cert.pem"),
+  };
 
-// ✅ Handle Uncaught Errors
+  https.createServer(httpsOptions, app).listen(PORT, () => {
+    console.log(`✅ HTTPS Server running on port ${PORT}`);
+  });
+} else {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ HTTP Server running on port ${PORT}`);
+  });
+}
+
+// ✅ จัดการ Error ที่ไม่ได้ catch
 process.on('uncaughtException', (err) => {
   console.error('🔥 Uncaught Exception:', err);
 });

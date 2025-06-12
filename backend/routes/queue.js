@@ -4,6 +4,7 @@ import {
   getAllQueues, 
   getQueueById, 
   updateQueueStatus, 
+  updateQueue,
   deleteQueue,
   generateInvoice,
 } from "../controllers/queueController.js";
@@ -19,6 +20,9 @@ router.get("/", authMiddleware, getAllQueues);
 
 // ✅ ดึงคิวตาม ID
 router.get("/:id", authMiddleware, getQueueById);
+
+// ✅ อัปเดตคิวตาม ID
+router.put("/:id", authMiddleware, updateQueue);
 
 // ✅ อัปเดตสถานะคิว
 router.put("/:id/status", authMiddleware, updateQueueStatus);

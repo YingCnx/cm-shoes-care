@@ -1,0 +1,31 @@
+/* Payout.css (ใช้ร่วมกันได้) */
+.btn-split {
+  display: inline-flex;
+  align-items: center;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  transition: 0.3s ease;
+}
+
+.btn-split:hover {
+  background-color: #0056b3;
+}
+
+.btn-text {
+  margin-right: 0.5rem;
+}
+
+.btn-icon {
+  font-size: 1rem;
+}
+
+.queue-card-wrapper {
+  background: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  padding: 1.5rem;
+}

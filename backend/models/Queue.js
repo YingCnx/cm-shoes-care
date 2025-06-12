@@ -1,15 +1,15 @@
 import pool from "../config/database.js";
 
-class Queue {
+  class Queue {
 
    // ✅ ฟังก์ชันสร้าง Queue ใหม่
-   static async create({ customer_name, phone, location, total_pairs, total_price = 0, delivery_date, branch_id }) {
+   static async create({customer_id, customer_name, phone, location, total_pairs, total_price = 0,received_date, delivery_date, branch_id,source }) {
     try {
         const result = await pool.query(
-            `INSERT INTO queue (customer_name, phone, location, total_pairs, total_price, delivery_date, branch_id, status, received_date) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, 'รับเข้า', NOW()) 
+            `INSERT INTO queue (customer_id,customer_name, phone, location, total_pairs, total_price, delivery_date, branch_id, status, received_date, source) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7,$8, 'รับเข้า', $9, $10) 
              RETURNING id`, // ✅ ต้องแน่ใจว่า column ที่ใส่ค่ามีครบ
-            [customer_name, phone, location, total_pairs, total_price, delivery_date, branch_id]
+            [customer_id,customer_name, phone, location, total_pairs, total_price, delivery_date, branch_id,received_date,source]
         );
         return result.rows[0].id; // ✅ Return queue_id
     } catch (error) {
@@ -23,10 +23,10 @@ class Queue {
   static async getAll() {
     try {
         const result = await pool.query(`
-            SELECT 
+           SELECT 
                 q.id AS queue_id, 
-                q.customer_name, 
-                q.phone, 
+                c.name AS customer_name, 
+                c.phone, 
                 q.location, 
                 q.total_pairs, 
                 q.total_price, 
@@ -42,10 +42,12 @@ class Queue {
                     )
                 ) FILTER (WHERE qi.service_id IS NOT NULL) AS services
             FROM queue q
+            LEFT JOIN customers c ON q.customer_id = c.id
             LEFT JOIN queue_items qi ON q.id = qi.queue_id
             LEFT JOIN services s ON qi.service_id = s.id
-            GROUP BY q.id
-            ORDER BY q.delivery_date ASC NULLS LAST
+            GROUP BY q.id, c.name, c.phone
+            ORDER BY q.delivery_date ASC NULLS LAST;
+
         `);
         return result.rows;
     } catch (error) {
@@ -57,29 +59,42 @@ class Queue {
     try {
         const result = await pool.query(`
             SELECT 
-                q.id AS queue_id, 
-                q.customer_name, 
-                q.phone, 
-                q.location, 
-                q.total_pairs, 
-                q.total_price, 
-                q.delivery_date, 
-                q.status, 
-                q.received_date,
-                q.payment_status,
-                json_agg(
-                    json_build_object(
-                        'service_id', qi.service_id,
-                        'service_name', s.service_name,
-                        'price_per_pair', qi.price_per_pair
-                    )
-                ) FILTER (WHERE qi.service_id IS NOT NULL) AS services
-            FROM queue q
-            LEFT JOIN queue_items qi ON q.id = qi.queue_id
-            LEFT JOIN services s ON qi.service_id = s.id
-            WHERE q.branch_id = $1  -- ✅ เพิ่มเงื่อนไขกรอง branch_id
-            GROUP BY q.id
-            ORDER BY q.delivery_date ASC NULLS LAST
+          q.id AS queue_id, 
+          c.name AS customer_name, 
+          c.phone, 
+          q.location, 
+          q.total_pairs, 
+          q.total_price, 
+          q.delivery_date, 
+          q.status, 
+          q.received_date,
+          q.payment_status,
+          q.source,             -- ✅ แหล่งที่มา เช่น locker, facebook, ฯลฯ
+          q.return_slot_id,     -- ✅ ช่องที่ใช้ส่งคืน
+          q.locker_id,          -- ✅ รหัสตู้
+          q.slot_id,            -- ✅ ช่องที่ใช้รับเข้า
+          json_agg(
+              json_build_object(
+                  'service_id', qi.service_id,
+                  'service_name', s.service_name,
+                  'price_per_pair', qi.price_per_pair
+              )
+          ) FILTER (WHERE qi.service_id IS NOT NULL) AS services
+      FROM queue q
+      LEFT JOIN customers c ON q.customer_id = c.id
+      LEFT JOIN queue_items qi ON q.id = qi.queue_id
+      LEFT JOIN services s ON qi.service_id = s.id
+      WHERE q.branch_id = $1  -- ✅ กรองตามสาขาผู้ใช้
+      GROUP BY 
+          q.id, 
+          c.name, 
+          c.phone,
+          q.source,
+          q.return_slot_id,
+          q.locker_id,
+          q.slot_id
+      ORDER BY q.delivery_date ASC NULLS LAST;
+
         `, [branch_id]);  // ✅ ส่งค่า branch_id ไปยัง Query
         return result.rows;
     } catch (error) {
@@ -99,8 +114,8 @@ class Queue {
         `
             SELECT 
                 q.id AS queue_id, 
-                q.customer_name, 
-                q.phone, 
+                c.name AS customer_name,       -- ✅ ดึงชื่อจาก customers
+                c.phone,                       -- ✅ ดึงเบอร์จาก customers
                 q.location, 
                 q.total_pairs, 
                 q.total_price, 
@@ -108,7 +123,11 @@ class Queue {
                 q.status, 
                 q.received_date,
                 q.payment_status,
-                b.name AS branch_name,  -- ✅ ดึงชื่อสาขามาด้วย
+                q.source,                                     -- ✅ ช่องทาง
+                l.code AS locker_code,                        -- ✅ รหัสตู้
+                l.name AS locker_name,                        -- ✅ ชื่อตู้
+                q.slot_id,         
+                b.name AS branch_name,         -- ✅ ดึงชื่อสาขา
                 json_agg(
                     json_build_object(
                         'service_id', qi.service_id,
@@ -117,12 +136,15 @@ class Queue {
                     )
                 ) FILTER (WHERE qi.service_id IS NOT NULL) AS services
             FROM queue q
+            LEFT JOIN customers c ON q.customer_id = c.id            -- ✅ JOIN กับ customers
             LEFT JOIN queue_items qi ON q.id = qi.queue_id
             LEFT JOIN services s ON qi.service_id = s.id
-            LEFT JOIN branches b ON q.branch_id = b.id  -- ✅ JOIN กับตาราง branches
-            WHERE q.id = $1  -- ✅ เงื่อนไขเลือกเฉพาะสาขาที่ต้องการ
-            GROUP BY q.id, b.name
-            ORDER BY q.delivery_date ASC NULLS LAST
+            LEFT JOIN branches b ON q.branch_id = b.id               -- ✅ JOIN กับ branches
+            LEFT JOIN lockers l ON q.locker_id = l.id  
+            WHERE q.id = $1                                          -- ✅ ดึงเฉพาะ queue ที่ต้องการ
+            GROUP BY q.id, c.name, c.phone, b.name, q.source, l.code, l.name, q.slot_id
+            ORDER BY q.delivery_date ASC NULLS LAST;
+
         `, [id]);  
 
       if (queueResult.rows.length === 0) {
@@ -239,8 +261,28 @@ class Queue {
     }
   }
 
-}
+  static async updateQueue(id, location, total_pairs, received_date, delivery_date) {
+    try {
+      const result = await pool.query(
+        `UPDATE queue SET location = $1, total_pairs = $2, received_date = $3, delivery_date = $4 WHERE id = $5 RETURNING *`,
+        [location, total_pairs, received_date, delivery_date, id]
+      );  
+      return result.rows[0];
+      } catch (error) {
+        throw new Error(`🔴 Error updating queue: ${error.message}`);
+      }
+    }
 
+      // ✅ ดึงคิวทั้งหมดที่ใช้ locker_id นี้
+  static async getByLockerId(lockerId) {
+    const result = await pool.query(
+      `SELECT * FROM queue WHERE locker_id = $1`,
+      [lockerId]
+    );
+    return result.rows;
+  }
+
+}
 
 
   // ✅ หาสถานะคิวจากเบอร์โทร
@@ -261,6 +303,8 @@ class Queue {
     return result.rows.length ? `สถานะ: ${result.rows[0].status}` : null;
   }
 
+
+    
   //สรุปรายได้ประจำเดือน
   export const getMonthlyRevenue = async () => {
     try {
@@ -275,6 +319,8 @@ class Queue {
         throw error;
     }
 };
+
+
 
 
 

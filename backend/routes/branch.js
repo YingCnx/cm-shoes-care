@@ -6,14 +6,14 @@ import {
   updateBranch,
   deleteBranch,
 } from "../controllers/branchController.js";
-import authMiddleware from "../middleware/authMiddleware.js";
+import authMiddleware, { verifySuperAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.get("/", authMiddleware, getBranches);
 router.get("/:id", authMiddleware, getBranchById);
-router.post("/", authMiddleware, createBranch);
-router.put("/:id", authMiddleware, updateBranch);
-router.delete("/:id", authMiddleware, deleteBranch);
+router.post("/", authMiddleware,verifySuperAdmin, createBranch);
+router.put("/:id", authMiddleware,verifySuperAdmin, updateBranch);
+router.delete("/:id", authMiddleware,verifySuperAdmin, deleteBranch);
 
 export default router;

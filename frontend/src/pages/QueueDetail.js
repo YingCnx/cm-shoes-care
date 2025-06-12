@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getQueueDetail, getAllServices, addQueueItems, deleteQueueItem, uploadAfterImages, updateQueueStatus, deleteQueue } from '../services/api';
+import { checkSession } from "../services/authService";
+import { getQueueDetail, getAllServices, addQueueItems, deleteQueueItem, uploadAfterImages, updateQueue, updateQueueStatus, deleteQueue,generateInvoice } from '../services/api';
 import { getExpenses, createExpense, deleteExpense, createPayment, cancelPayment } from "../services/api"; 
 import './QueueDetail.css';
 import '../assets/css/bootstrap.min.css';
@@ -10,6 +11,12 @@ import AddExpenseModal from "../components/AddExpenseModal";
 import UpdateQueueStatusModal from "../components/UpdateQueueStatusModal";
 import PaymentModal from "../components/PaymentModal";
 import { printReceipt } from "../components/printReceipt"; // ✅ Import ฟังก์ชันพิมพ์สลิป
+import EditQueueModal from "../components/EditQueueModal";
+import InvoiceModal from '../components/InvoiceModal';
+import CameraCaptureModal from "../components/CameraCaptureModal";
+import { FaEye,FaPlus } from 'react-icons/fa';
+
+
 
 
 const QueueDetail = () => {
@@ -50,17 +57,51 @@ const QueueDetail = () => {
 
     const [showPaymentModal, setShowPaymentModal] = useState(false);
 
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingQueue, setEditingQueue] = useState(null);
+
+    const [currentAfterPosition, setCurrentAfterPosition] = useState(null);
+
+
+    const [invoiceUrl, setInvoiceUrl] = useState(null);
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+
+    
+    const sourceColors = {
+        manual:   '#6C757D',  // เทา Bootstrap = เจ้าหน้าที่กรอกเอง (ไม่มีแอป)
+        locker:   '#FFB74D',  // ส้มพาสเทล = Locker (สีแทนเองแบบอบอุ่นและแตกต่าง)
+        line:     '#06C755',  // เขียว LINE Official (จาก LINE Brand Guidelines)
+        facebook: '#1877F2',  // น้ำเงิน Facebook
+        wechat:   '#7BB32E',  // เขียว WeChat จริง (จาก Tencent branding)
+        unknown:  '#B0BEC5'   // เทาพาสเทล = ไม่ระบุ
+    };
+
+    const sourceLabels = {
+        manual: 'พนักงาน',
+        locker: 'Locker',
+        line: 'LINE',
+        facebook: 'Facebook',
+        wechat: 'WeChat',
+        unknown: 'ไม่ระบุ'
+    };
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            navigate('/login');
+    const init = async () => {
+        const user = await checkSession();
+        if (!user) {
+        setTimeout(() => navigate("/login"), 0);
+        return;
         }
+
         if (queue_id) {
-            fetchQueueDetail();
-            fetchServices();
-            fetchExpenses();
+        fetchQueueDetail();
+        fetchServices();
+        fetchExpenses();
         }
-    }, [queue_id]);
+    };
+
+    init();
+    }, [navigate, queue_id]);
+
 
     const fetchQueueDetail = async () => {
         try {
@@ -167,35 +208,39 @@ const QueueDetail = () => {
             setAfterImages(prev => ({ ...prev, [position]: file }));
         }
     };
-
+        
     const handleUploadAfterImages = async () => {
         if (!selectedItemId) {
             alert("❌ ไม่พบ Item ID");
             return;
         }
 
-        // ✅ ตรวจสอบว่ามีรูปครบหรือไม่
-        // ✅ ตรวจสอบว่ามีรูปครบทั้ง 6 ด้าน
-        const requiredImages = ["front", "back", "left", "right", "top", "bottom"];
-        const missingImages = requiredImages.filter(pos => !afterImages[pos]); 
-
-        if (missingImages.length > 0) {
-            alert(`❌ กรุณาอัปโหลดรูป After ให้ครบทุกมุม!\nยังขาดรูป: ${missingImages.join(", ")}`);
+        const positions = Object.keys(afterImages).filter(pos => afterImages[pos] instanceof File);
+        if (positions.length === 0) {
+            alert("❌ กรุณาเลือกรูป AFTER อย่างน้อย 1 มุมก่อนอัปโหลด");
             return;
         }
 
-        if (!window.confirm("ต้องการ Upload รูป ใช่หรือไม่?")) return;
+        const confirm = window.confirm("คุณแน่ใจหรือไม่ว่าต้องการอัปโหลดรูป AFTER?");
+        if (!confirm) return;
+
+        const formData = new FormData();
+        for (const pos of positions) {
+            formData.append(`image_after_${pos}`, afterImages[pos]);
+        }
+
         try {
-            //console.log("📌 Debug: กำลังอัปโหลดรูป After...", selectedItemId, afterImages);
-            await uploadAfterImages(queue_id, selectedItemId, afterImages);
-            alert("✅ อัปโหลดรูป After สำเร็จ!");
-            await fetchQueueDetail(); // รีเฟรชข้อมูลใหม่
-            closeUploadAfterModal(); // ปิด Modal หลังอัปโหลดสำเร็จ
+            await uploadAfterImages(queue_id, selectedItemId, formData);
+            alert("✅ อัปโหลดรูป AFTER สำเร็จ!");
+            await fetchQueueDetail(); // รีโหลดข้อมูล
+            closeUploadAfterModal();  // ปิด modal และเคลียร์ state
+            setAfterImages({ front: null, back: null, left: null, right: null, top: null, bottom: null }); // reset
         } catch (error) {
             console.error("🔴 Error uploading after images:", error);
+            alert("❌ เกิดข้อผิดพลาดในการอัปโหลด!");
         }
     };
-    
+
     const handleAddShoe = async (selectedService, shoeData) => {
     
         if (!selectedService || !shoeData.brand || !shoeData.model || !shoeData.color) {
@@ -342,6 +387,10 @@ const QueueDetail = () => {
     };
 
     const handleDeleteQueue = async (queueId) => {
+            if(queue.status == "จัดส่งสำเร็จ"){
+                alert("🔴 ไม่สามารถลบคิวที่จัดส่งสำเร็จ!");
+                return;
+            }
      
             if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบคิวนี้?")) {
                 try {
@@ -399,236 +448,414 @@ const QueueDetail = () => {
         }
     };
 
+    const handleEdit = (queueId) => {
+        setSelectedQueueId(queueId);
+        setShowEditModal(true);
+    };
+
+    
+    const handleUpdateQueue = async (updatedData) => {
+        // 👉 call API updateQueue here
+        const id = updatedData.queue_id;
+        try{
+            await updateQueue(id, updatedData);
+            alert("✅ แก้ไขข้อมูลคิวเรียบร้อย!");
+            fetchQueueDetail(); // โหลดข้อมูลใหม่
+        }
+        catch(error){
+            console.error("🔴 Error updating queue:", error);
+            alert("❌ ไม่สามารถอัปเดตข้อมูลคิวได้");
+        }
+        // จากนั้นค่อยปิด modal
+        setShowEditModal(false);
+    };
+
+    const handleCloseEditModal = () => {
+        setShowEditModal(false);  
+    };
+
+    const handleGenerateInvoice = async (queue_id) => {
+        try {
+            const res = await generateInvoice(queue_id); // เรียก API
+            setInvoiceUrl(res.data.image_base64); // ✅ ใช้รูปแบบ Base64
+            console.log("📄 Base64:", res.data.image_base64);
+            setShowInvoiceModal(true); // ✅ เปิด Modal
+        } catch (error) {
+            console.error("🔴 Error generating invoice:", error);
+            alert("❌ ไม่สามารถสร้างใบแจ้งราคาได้");
+        }
+    };
+    
+
+
+    const buttonStyle = {
+        minWidth: "120px",
+        fontSize: "16px",
+        padding: "10px 16px",
+        borderRadius: "12px",
+        textAlign: "center",
+        };
+
     if (!queue) return <p>⏳ กำลังโหลดข้อมูล...</p>;
 
     return (
-        <div className="container queue-detail-container">
-            <div className="d-flex justify-content-between mb-3">
-            <button className="btn btn-secondary" onClick={() => navigate('/queue')}>
-                ⬅️ กลับไปหน้าคิว
-            </button>
-            <div className="ms-auto">
-            {isPaid ? (
-                    <button className="btn btn-danger btn-md me-3" onClick={handleCancelPayment}>
-                        ⛔ ยกเลิกชำระเงิน
+        <div className="queue-container">
+            <div className="d-flex justify-content-between align-items-center"> {/* ✅ Container for date/time and title */}
+             <div>
+                <br/>
+                <h2> รายละเอียด</h2>
+             </div>
+          </div>
+          <div className="section-card position-relative">
+            <div className="position-relative">
+                {/* ✅ ปุ่มลอยมุมขวาบน */}
+                <div
+                className="position-absolute top-0 end-0 d-flex gap-2 flex-wrap"
+                style={{ transform: "translateY(-20px)" }}
+                >
+                <button className="btn btn-primary uniform-button" style={buttonStyle} onClick={() => handleEdit(queue_id)}>
+                    ✏️ แก้ไข
+                </button>
+                {isPaid ? (
+                    <button className="btn btn-danger uniform-button" style={buttonStyle} onClick={handleCancelPayment}>
+                    ⛔ ยกเลิกชำระเงิน
                     </button>
                 ) : (
-                    <button className="btn btn-success btn-md me-3" onClick={handleOpenPaymentModal} disabled={isTotalZero}>
-                        💰 ชำระเงิน
+                    <button className="btn btn-success uniform-button" style={buttonStyle} onClick={handleOpenPaymentModal} disabled={isTotalZero}>
+                    💰 ชำระเงิน
                     </button>
                 )}
-
-            <button className="btn btn-danger btn-md" onClick={() => handleDeleteQueue(queue_id)} disabled={isPaid}>
-                ลบคิว
-            </button>
-            <button className="btn btn-warning btn-md me-2" 
-                onClick={() => handleOpenUpdateStatusModal(queue.queue_id, queue.status)}
-            >
-                อัปเดตสถานะคิว
-            </button>
-            
-            
-            </div>
-        </div>
-
-
-        <div className="card p-3 shadow mb-4 position-relative">
-            {/* ✅ สถานะคิวที่มุมขวาบน */}
-            <div className="position-absolute top-0 end-0 m-3 p-2 fs-5 fw-bold">
-                <div>
-                    <span className="text-dark">สถานะงานปัจจุบัน :</span> 
-                    <span className={getStatusTextClass(queue.status)}> {queue.status}</span>
+                <button className="btn btn-warning uniform-button" style={buttonStyle} onClick={() => handleOpenUpdateStatusModal(queue.queue_id, queue.status)}>
+                    อัปเดตสถานะ
+                </button>
+                <button className="btn btn-success uniform-button" style={buttonStyle} onClick={() =>handleGenerateInvoice(queue_id)}>
+                     ใบแจ้งราคา                      
+                </button>
+                <button className="btn btn-danger uniform-button" style={buttonStyle} onClick={() => handleDeleteQueue(queue_id)} disabled={isPaid}>
+                    ลบคิว
+                </button>
                 </div>
-                <div>
-                    <span className="text-dark">สถานะชำระเงิน :</span> 
-                    <span className={getStatusTextClass(queue.payment_status)}> {queue.payment_status}</span>
+
+                {/* ✅ สถานะ ลอยใต้ปุ่ม */}
+                <div
+                className="position-absolute end-0"
+                style={{
+                    top: "40px", // ปรับตามความสูงของปุ่ม
+                    background: "#f8f9fa",
+                    padding: "8px 16px",
+                    borderRadius: "12px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    zIndex: 1,
+                }}
+                >
+                <div className="d-flex gap-5 flex-wrap align-items-center">
+                    <span className="fw-bold text-dark">
+                    📦 สถานะงาน:
+                    <span className={getStatusTextClass(queue.status)} style={{ marginLeft: "6px" }}>
+                        {queue.status}
+                    </span>
+                    </span>
+
+                    <span className="fw-bold text-dark">
+                    💳 ชำระเงิน:
+                    <span className={getStatusTextClass(queue.payment_status)} style={{ marginLeft: "6px" }}>
+                        {queue.payment_status}
+                    </span>
+                    </span>
                 </div>
+                </div>
+
+                {/* ✅ หัวคิว */}
+                <h5 className="mb-3">🏷️ คิวงาน #{queue_id} - สาขา {queue.branch_name}</h5>
+            </div>
+
+            <div className="row mb-2">
+            <div className="col-md-5">
+                <strong>ช่องทาง:</strong>{" "}
+                <span
+                style={{
+                    backgroundColor: sourceColors[queue.source] || "#eee",
+                    color: "white",
+                    padding: "2px 8px",
+                    borderRadius: "5px",
+                    padding: "2px 8px",
+                    fontSize: "0.75rem",
+                }}
+                >
+                {sourceLabels[queue.source] || "ไม่ระบุ"}
+                </span>
+            </div>
+
+            {queue.source === "locker" && (
+                <div className="col-md-6">
+                <strong>ตู้:</strong>{" "}
+                <span className="text-muted">
+                    {queue.locker_code} - {queue.locker_name}
+                </span>{" "}
+                | <strong>ช่อง:</strong>{" "}
+                <span className="text-muted">{queue.slot_id}</span>
+                </div>
+            )}
+            </div>
+
+            {/* ✅ ข้อมูลลูกค้า */}
+            <div className="row mb-2">
+                <div className="col-md-5">
+                <strong>ลูกค้า : </strong> {queue.customer_name}
+                </div>
+                <div className="col-md-6">
+                <strong>เบอร์โทร : </strong> {queue.phone}
+                </div>
+            </div>
+            
+            <div className="row mb-2">
+                <div className="col-md-5">
+                <strong>สถานที่ : </strong> {queue.location}
+                </div>
+                <div className="col-md-6">
+                <strong>จำนวนคู่ : </strong> {queue.total_pairs}
+                </div>
+            </div>
+
+            <div className="row mb-2">
+                <div className="col-md-5">
+                <strong>วันที่รับ : </strong> {new Date(queue.received_date).toLocaleDateString()}
+                </div>
+                <div className="col-md-6">
+                <strong>กำหนดส่ง : </strong> {new Date(queue.delivery_date).toLocaleDateString()}
+                </div>
+            </div>
             </div>
 
 
 
-
-
-
-            <h4>🏷️ รายละเอียดคิว #{queue_id} -  สาขา {queue.branch_name}</h4> 
-            <p>👤 ลูกค้า: {queue.customer_name}</p>
-            <p>📞 เบอร์โทร: {queue.phone}</p>
-            <p>📍 สถานที่: {queue.location}</p>
-            <p>👟 จำนวนคู่: {queue.total_pairs}</p>
-        </div>
-
-
+            <div className="section-card">
             <div className="d-flex justify-content-between align-items-center mb-2">
                 <h4>👟 รายการรองเท้า</h4>
-                <button className="btn btn-primary" onClick={() => {
-                        setShowAddShoeModal(true);
-                    }} disabled={isPaid}>
-                        ➕ เพิ่มรองเท้า
-                    </button>
-
+                        <button
+                            className="btn btn-primary" onClick={() => {setShowAddShoeModal(true);}}
+                            disabled={isPaid}
+                            >
+                            <FaPlus style={{ marginRight: "6px" }} />
+                            เพิ่มรองเท้า
+                        </button>
             </div>
 
-            <table className="table table-bordered table-striped">
-                <thead className="table-dark">
-                    <tr>
-                        <th>แบรนด์</th>
-                        <th>รุ่น</th>
-                        <th>สี</th>
-                        <th>BEFORE</th>
-                        <th>AFTER</th>
-                        <th>รายละเอียด</th>
-                        <th>ลบ</th>
+           <table className="table table-hover table-striped">
+            <thead>
+                <tr>
+                <th>แบรนด์</th>
+                <th>รุ่น</th>
+                <th>สี</th>
+                <th>รูป BEFORE</th>
+                <th>รูป AFTER</th>
+                <th>ค่าบริการ</th>
+                <th>ลบ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {queue.queue_items.length === 0 ? (
+                <tr>
+                    <td colSpan="7" className="text-center text-muted py-3">
+                    📭 ยังไม่มีรายการรองเท้าในคิวนี้
+                    </td>
+                </tr>
+                ) : (
+                queue.queue_items.map((item, index) => (
+                    <tr key={index} onClick={() => handleShowShoeDetail(item)}>
+                    <td>{item.brand}</td>
+                    <td>{item.model}</td>
+                    <td>{item.color}</td>
+
+                    {/* ✅ BEFORE Images */}
+                    <td>
+                        <div className="shoe-images">
+                        {["front"].map((pos) =>
+                            item[`image_before_${pos}`] ? (
+                            <img
+                                key={pos}
+                                src={`${Backend_URL}${item[`image_before_${pos}`]}`}
+                                alt={`before-${pos}`}
+                                width="50"
+                            />
+                            ) : null
+                        )}
+                        </div>
+                    </td>
+
+                    {/* ✅ AFTER Images */}
+                    <td>
+                        <div className="shoe-images">
+                        {["front"].map((pos) =>
+                            item[`image_after_${pos}`] ? (
+                            <img
+                                key={pos}
+                                src={`${Backend_URL}${item[`image_after_${pos}`]}`}
+                                alt={`after-${pos}`}
+                                width="50"
+                            />
+                            ) : null
+                        )}
+                        </div>
+                    </td>
+
+                    <td>{item.price_per_pair}</td>
+
+                    {/* ✅ ปุ่มลบ */}
+                    <td>
+                        <button
+                        className="btn btn-danger btn-sm"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveShoe(item.queue_item_id);
+                        }}
+                        disabled={isPaid}
+                        >
+                        ❌ ลบ
+                        </button>
+                    </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {queue.queue_items.map((item, index) => (
-                        <tr key={index}>
-                            <td>{item.brand}</td>
-                            <td>{item.model}</td>
-                            <td>{item.color}</td>
-
-                            {/* ✅ BEFORE Images */}
-                            <td>
-                                <div className="shoe-images">
-                                    {["front"].map((pos) => (
-                                        item[`image_before_${pos}`] ? (
-                                            <img key={pos} src={`${Backend_URL}${item[`image_before_${pos}`]}`} alt={`before-${pos}`} width="50" />
-                                        ) : null
-                                    ))}
-                                </div>
-                            </td>
-
-                            {/* ✅ AFTER Images */}
-                            <td>
-                                <div className="shoe-images">
-                                    {["front"].map((pos) => (
-                                        item[`image_after_${pos}`] ? (
-                                            <img key={pos} src={`${Backend_URL}${item[`image_after_${pos}`]}`} alt={`after-${pos}`} width="50" />
-                                        ) : (
-                                            <button 
-                                                key={pos}
-                                                className="btn btn-warning btn-sm" 
-                                                onClick={() => openUploadAfterModal(item.queue_item_id)}
-                                                
-                                            >
-                                                Upload
-                                            </button>
-                                        )
-                                    ))}
-                                </div>
-                            </td>
-
-                            {/* ✅ ปุ่มแสดงรายละเอียด */}
-                            <td>
-                                <button className="btn btn-info btn-sm" onClick={() => handleShowShoeDetail(item)}>
-                                    รายละเอียด
-                                </button>
-                            </td>
-
-                            {/* ✅ ปุ่มลบรองเท้า */}
-                            <td>
-                                <button className="btn btn-danger btn-sm" onClick={() => handleRemoveShoe(item.queue_item_id)} disabled={isPaid}>
-                                    X
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
+                ))
+                )}
+            </tbody>
             </table>
 
+            
             <div className="d-flex justify-content-between align-items-center mb-2 mt-4">
                 <h4>💰 ค่าใช้จ่ายเพิ่มเติม</h4>
-                <button className="btn btn-primary" onClick={() => setShowAddExpenseModal(true)} disabled={isPaid}>
-                    ➕ เพิ่มค่าใช้จ่าย
+                <button
+                    className="btn btn-primary" onClick={() => setShowAddExpenseModal(true)} disabled={isPaid}>
+                    <FaPlus style={{ marginRight: "6px" }} />
+                    เพิ่มค่าใช้จ่าย
                 </button>
             </div>
+           
             {/* ตารางค่าใช้จ่ายเพิ่มเติม */}
-            <table className="table table-bordered table-striped">
-                <thead className="table-dark">
+            <table className="table table-hover table-striped">
+                <thead>
                     <tr>
-                        <th>รายละเอียด</th>
-                        <th>จำนวนเงิน (บาท)</th>
-                        <th>ลบ</th>
+                    <th>รายละเอียด</th>
+                    <th>จำนวนเงิน (บาท)</th>
+                    <th>ลบ</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {expenses.map((expense, index) => (
+                    {expenses.length === 0 ? (
+                    <tr>
+                        <td colSpan="3" className="text-center text-muted py-3">
+                        📭 ยังไม่มีรายการค่าใช้จ่ายเพิ่มเติม
+                        </td>
+                    </tr>
+                    ) : (
+                    expenses.map((expense, index) => (
                         <tr key={index}>
-                            <td>{expense.description}</td>
-                            <td>{expense.amount}</td>
-                            <td>
-                                <button 
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => handleDeleteExpense(expense.id)}
-                                    disabled={isPaid}
-                                >
-                                    ❌ ลบ
-                                </button>
-                            </td>
+                        <td>{expense.description}</td>
+                        <td>{expense.amount}</td>
+                        <td>
+                            <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => handleDeleteExpense(expense.id)}
+                            disabled={isPaid}
+                            >
+                            ❌ ลบ
+                            </button>
+                        </td>
                         </tr>
-                    ))}
+                    ))
+                    )}
                 </tbody>
-            </table>
+                </table>
 
+              </div>       
             <div className="card p-3 shadow mt-4">
 
                 {/* ✅ ตารางสรุปบริการที่ใช้ */}
                 <h4>📋 สรุปบริการที่ใช้</h4>
-                <table className="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th>บริการ</th>
-                            <th>จำนวน</th>
-                            <th>ราคารวม (บาท)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {getServiceSummary().map((service, index) => (
-                            <tr key={index}>
-                                <td>{service.service_name}</td>
-                                <td>{service.total_pairs}</td>
-                                <td>{service.total_price ? service.total_price.toFixed(2) : "0.00"}</td>
-                            </tr>
-                        ))}
-                        {/* ✅ แสดงบรรทัดรวมยอดท้ายตาราง */}
-                        <tr className="total-row">
-                            <td><strong>รวมทั้งหมด</strong></td>
-                            <td><strong>{getServiceSummary().reduce((sum, s) => sum + s.total_pairs, 0)}</strong></td>
-                            <td><strong>{getServiceSummary().reduce((sum, s) => sum + s.total_price, 0).toFixed(2)}</strong></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <table className="table table-hover table-striped">
+  <thead>
+    <tr>
+      <th>บริการ</th>
+      <th>จำนวน</th>
+      <th>ราคารวม (บาท)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {getServiceSummary().length === 0 ? (
+      <tr>
+        <td colSpan="3" className="text-center text-muted py-3">
+          📭 ยังไม่มีบริการในคิวนี้
+        </td>
+      </tr>
+    ) : (
+      <>
+        {getServiceSummary().map((service, index) => (
+          <tr key={index}>
+            <td>{service.service_name}</td>
+            <td>{service.total_pairs}</td>
+            <td>{service.total_price ? service.total_price.toFixed(2) : "0.00"}</td>
+          </tr>
+        ))}
+
+        {/* ✅ บรรทัดรวมยอดท้ายตาราง */}
+        <tr className="total-row">
+          <td><strong>รวมทั้งหมด</strong></td>
+          <td><strong>{getServiceSummary().reduce((sum, s) => sum + s.total_pairs, 0)}</strong></td>
+          <td><strong>{getServiceSummary().reduce((sum, s) => sum + s.total_price, 0).toFixed(2)}</strong></td>
+        </tr>
+      </>
+    )}
+  </tbody>
+</table>
+
 
             </div>
-            
+                    
+        {showUploadAfterModal && (
+            <div className="upload-modal-overlay d-flex align-items-center justify-content-center">
+                <div className="upload-modal-content card p-4 shadow-lg" style={{ width: '90%', maxWidth: '800px' }}>
+                    <h3 className="text-center mb-4">📷 อัปโหลดรูป AFTER</h3>
 
-            {showUploadAfterModal  && (
-                <div className="modal-overlay" >
-                    <div className="modal-content" style={{ backgroundColor: "#fff" }}>
-                        <h2>📷 อัปโหลดรูป After</h2>
-                        <div className="image-upload-container">
-                            {["front", "back", "left", "right", "top", "bottom"].map((pos, index) => (
-                                <div key={index} className="image-upload-box">
-                                    <label>{`📷 ด้าน ${pos.toUpperCase()}`}</label>
-                                    <input 
-                                        type="file" 
-                                        accept="image/*" 
-                                        onChange={(e) => handleAfterImageUpload(pos, e.target.files[0])} 
-                                    />
-                                    {afterImages[pos] && (
-                                        <img src={URL.createObjectURL(afterImages[pos])} alt={`after-${pos}`} width="100" />
-                                    )}
+                    <div className="row g-4">
+                        {["front", "back", "left", "right", "top", "bottom"].map((pos, index) => (
+                            <div key={index} className="col-6 col-md-4 text-center">
+                                <label className="form-label fw-bold">{`📷 ด้าน ${pos.toUpperCase()}`}</label>
+                                <div className="mb-2">
+                                    <button className="btn btn-outline-primary w-100" onClick={() => setCurrentAfterPosition(pos)}>
+                                        ถ่ายรูป
+                                    </button>
                                 </div>
-                            ))}
-                        </div>
-                        <div className="modal-actions">
-                            <button onClick={closeUploadAfterModal}>❌ ปิด</button>
-                            <button onClick={handleUploadAfterImages}>✅ อัปโหลด</button>
-                        </div>
+                                {afterImages[pos] && (
+                                    <img
+                                        src={URL.createObjectURL(afterImages[pos])}
+                                        alt={`after-${pos}`}
+                                        className="img-thumbnail"
+                                        style={{ width: '100%', maxHeight: '120px', objectFit: 'cover' }}
+                                    />
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="d-flex justify-content-end mt-4 gap-2">
+                        <button className="btn btn-danger" onClick={closeUploadAfterModal}>❌ ปิด</button>
+                        <button className="btn btn-success" onClick={handleUploadAfterImages}>✅ อัปโหลด</button>
                     </div>
                 </div>
-            )}
 
+                {/* Modal ถ่ายรูป */}
+                <CameraCaptureModal
+                    show={!!currentAfterPosition}
+                    onClose={() => setCurrentAfterPosition(null)}
+                    onCapture={(file) => {
+                        setAfterImages(prev => ({ ...prev, [currentAfterPosition]: file }));
+                        setCurrentAfterPosition(null);
+                    }}
+                />
+            </div>
+        )}
+
+
+        <div className="container queue-detail-container">
             <PaymentModal
                 show={showPaymentModal}
                 onClose={() => setShowPaymentModal(false)}
@@ -658,7 +885,7 @@ const QueueDetail = () => {
                     services={services} 
                 />
             )}
-
+        
             {showShoeDetailModal && (
                 <ShoeDetailModal 
                 show={showShoeDetailModal} 
@@ -668,7 +895,9 @@ const QueueDetail = () => {
                 fetchQueueDetail={fetchQueueDetail} 
                 uploadAfterImages={uploadAfterImages} 
             />        
-            )}
+                    )}
+       
+            
 
             {/* Modal เพิ่มค่าใช้จ่าย */}
             <AddExpenseModal
@@ -677,7 +906,22 @@ const QueueDetail = () => {
                 onAddExpense={handleAddExpense} // ✅ ตรวจสอบว่าใช้ฟังก์ชันที่แก้ไขแล้ว
             />
 
+             {/* Modal แก้ไขข้อมูลคิว */}           
+            <EditQueueModal
+                show={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                queueId={selectedQueueId}
+                onSave={handleUpdateQueue}
+            />
 
+            {/* Modal ใบแจ้งราคา */}    
+            <InvoiceModal
+                show={showInvoiceModal}
+                onClose={() => setShowInvoiceModal(false)}
+                imageBase64={invoiceUrl}
+                />
+
+            </div>
         </div>
     );
 };

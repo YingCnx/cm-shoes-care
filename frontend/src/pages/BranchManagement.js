@@ -5,6 +5,7 @@ import { jwtDecode } from "jwt-decode";  // ✅ ใช้ jwtDecode ตรวจ
 import AddBranchModal from "../components/AddBranchModal";
 import "./BranchManagement.css";
 import "../assets/css/bootstrap.min.css";
+import { checkSession } from "../services/authService";
 
 const BranchManagement = () => {
     const navigate = useNavigate();
@@ -14,26 +15,25 @@ const BranchManagement = () => {
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token) {
-            navigate("/login"); // ✅ หากไม่มี token ให้ไปหน้า Login
+        const verify = async () => {
+            const user = await checkSession();
+
+            if (!user) {
+            setTimeout(() => navigate("/login"), 0); // ป้องกัน error insecure
             return;
-        }
-
-        try {
-            const user = jwtDecode(token);
-            setIsSuperAdmin(user.isSuperAdmin); // ✅ ตรวจสอบว่าเป็น SuperAdmin หรือไม่
-
-            if (user.isSuperAdmin) {
-                fetchBranches(); // ✅ โหลดข้อมูลเฉพาะเมื่อเป็น SuperAdmin
-            } else {
-                navigate("/dashboard"); // ✅ ถ้าไม่ใช่ SuperAdmin ให้กลับไปหน้า Dashboard
             }
-        } catch (error) {
-            console.error("🔴 Error decoding token:", error);
-            navigate("/login"); // ✅ หาก decode token ไม่ได้ให้กลับไปหน้า Login
-        }
-    }, []);
+
+            if (user.role !== "superadmin") {
+            navigate("/dashboard"); // ❌ ไม่ใช่ SuperAdmin → Redirect ไปหน้า Dashboard
+            return;
+            }
+
+            setIsSuperAdmin(true); // ✅ เป็น SuperAdmin
+            fetchBranches();
+        };
+
+        verify();
+        }, [navigate]);
 
     const fetchBranches = async () => {
         try {

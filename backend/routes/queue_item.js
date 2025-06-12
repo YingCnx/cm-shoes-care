@@ -5,6 +5,7 @@ import {
   deleteQueueItem 
 } from "../controllers/queueItemController.js";
 import multer from "multer";
+import crypto from 'crypto';
 
 const router = express.Router();
 
@@ -14,7 +15,9 @@ const storage = multer.diskStorage({
     cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}_${file.originalname}`);
+    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(4).toString('hex');
+    const sanitized = file.originalname.replace(/\s+/g, '_');
+    cb(null, `${uniqueSuffix}_${sanitized}`);
   }
 });
 
@@ -31,7 +34,15 @@ router.post("/:queue_id/items", upload.fields([
 ]), addQueueItem);
 
 // ✅ API อัปโหลดรูป After
-router.put("/:queue_id/items/:item_id/after-images", upload.any(), uploadAfterImages);
+router.put("/:queue_id/items/:item_id/after-images", upload.fields([
+  { name: "image_after_front", maxCount: 1 },
+  { name: "image_after_back", maxCount: 1 },
+  { name: "image_after_left", maxCount: 1 },
+  { name: "image_after_right", maxCount: 1 },
+  { name: "image_after_top", maxCount: 1 },
+  { name: "image_after_bottom", maxCount: 1 }
+]), uploadAfterImages);
+
 
 
 // ✅ API ลบรายการรองเท้า

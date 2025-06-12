@@ -1,0 +1,85 @@
+.invoice-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.invoice-modal-content {
+  background: white;
+  padding: 1rem;
+  border-radius: 10px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.invoice-modal-header {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.invoice-modal-body {
+  max-height: 80vh;
+  overflow-y: auto;
+  padding-top: 2.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.invoice-modal-body img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.btn-theme {
+  padding: 6px 10px;
+  font-size: 13px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+  transition: background 0.2s ease;
+}
+
+.btn-theme.print,
+.btn-theme.download {
+  background-color: #2EBDBD;
+}
+
+.btn-theme.print:hover,
+.btn-theme.download:hover {
+  background-color: #1ea7a7;
+}
+
+.btn-theme.close {
+  background-color: #F4656D;
+}
+
+.btn-theme.close:hover {
+  background-color: #d8444e;
+}
+
+.btn-fixed {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+}
