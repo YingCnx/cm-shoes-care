@@ -64,3 +64,54 @@ export const getAllLockerDrops = async (req, res) => {
     res.status(500).json({ message: "ไม่สามารถดึงรายการฝากตู้ทั้งหมดได้" });
   }
 };
+
+
+export const createLockerDrop = async (req, res) => {
+  try {
+    const {
+      phone,
+      branch_id,
+      locker_id,
+      slot_id,
+      slot_type = 'standard',
+      service_type,
+      total_pairs = 1,
+      created_via = 'locker',
+    } = req.body;
+
+    // ✅ สร้าง transaction
+    const transaction = await createTransaction({
+      phone,
+      branch_id,
+      locker_id,
+      slot_id,
+      slot_type,
+      status: 'dropped', // default เมื่อฝากรองเท้า
+    });
+
+    // ✅ สร้าง locker_drop
+    // await db.none(
+    //   `
+    //   INSERT INTO locker_drop (transaction_id, locker_id, slot_id, status, service_type, total_pairs)
+    //   VALUES ($1, $2, $3, 'pending_pickup', $4, $5)
+    //   `,
+    //   [transaction.id, locker_id, slot_id, service_type, total_pairs]
+    // );
+
+    // ✅ อัปเดตสถานะช่องตู้เป็น used
+    await db.none(
+      `
+      UPDATE locker_slots SET status = 'used' WHERE id = $1
+      `,
+      [slot_id]
+    );
+
+    res.status(201).json({
+      message: 'ฝากรองเท้าสำเร็จ',
+      transaction,
+    });
+  } catch (err) {
+    console.error('เกิดข้อผิดพลาด:', err);
+    res.status(500).json({ error: 'ไม่สามารถฝากรองเท้าได้' });
+  }
+};

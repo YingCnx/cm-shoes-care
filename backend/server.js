@@ -25,36 +25,49 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(helmet());
 
-// ✅ กำหนด CORS แบบเฉพาะ origin + credentials
 const allowedOrigins = [
-  "http://localhost:3000",
+  "http://localhost:3000",         // Frontend หลัก
+  "http://localhost:5173",         // Smart Locker Frontend
   "http://app.suggerb.com",
   "https://app.suggerb.com",
-  "149.56.87.48"
+  "http://locker.suggerb.com",
+  "http://149.56.87.48"
 ];
 
-  app.use((req, res, next) => {
-    const allowedOrigins = [
-      "http://localhost:3000",
-      "http://app.suggerb.com",
-      "https://app.suggerb.com"
-    ];
-    const origin = req.headers.origin;
+const credentialOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://app.suggerb.com",
+  "https://app.suggerb.com"
+];
 
-    if (allowedOrigins.includes(origin)) {
-      res.setHeader("Access-Control-Allow-Origin", origin); // ✅ ใช้ตัวเดียวเท่านั้น
-      res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ สำคัญมาก
-    }
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
 
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
 
-    if (req.method === "OPTIONS") {
-      return res.sendStatus(200);
-    }
+  if (credentialOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
 
-    next();
-  });
+  res.setHeader("Access-Control-Allow-Headers", [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "X-Locker-ID",
+    "X-Locker-Secret"
+  ].join(", "));
+
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
 
 // ✅ โหลด static files และจัดการ Cross-Origin Policy
 const setCORSHeaders = (res, path) => {
@@ -79,7 +92,8 @@ import reportRoutes from "./routes/report.js";
 import payoutRoutes from "./routes/payout.js";
 import LockersRoutes from "./routes/lockerRoutes.js";
 import backupRoutes from "./routes/backup.js";
-import lockerDropRoutes from "./routes/lockerDropRoutes.js";
+import lockerOtpRoutes from './routes/locker/otpRoutes.js';
+import lockerDropRoutes from './routes/locker/dropRoutes.js';
 
 // ✅ เชื่อม Route หลัก
 app.use('/api/auth', authRoutes);
@@ -96,7 +110,8 @@ app.use("/api/payouts", payoutRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/lockers", LockersRoutes);
 app.use("/api/backup", backupRoutes);
-app.use("/locker-drop", lockerDropRoutes);
+app.use('/api/locker/otp', lockerOtpRoutes);
+app.use('/api/locker/drop', lockerDropRoutes);
 
 // ✅ Global Error Handler
 app.use((err, req, res, next) => {

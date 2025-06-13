@@ -3,7 +3,8 @@ import {
   getPendingLockerDrops,
   updateLockerDropStatus,
   getLockerDropById,
-  getAllLockerDrops
+  getAllLockerDrops,
+  createLockerDrop
 } from "../controllers/lockerDropController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -20,5 +21,10 @@ router.get("/:id(\\d+)", authMiddleware, getLockerDropById);
 
 // 🛠️ อัปเดตสถานะ เช่น 'received', 'processing'
 router.put("/:id/status", authMiddleware, updateLockerDropStatus);
+
+//--------------งานจากฝั่ง Locker--------------//
+
+// POST /api/locker-drop
+router.post('/', createLockerDrop);
 
 export default router;
