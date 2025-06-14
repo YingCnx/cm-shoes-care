@@ -1,12 +1,12 @@
 // LockerManagement.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { checkSession } from "../services/authService";
-import { getBranches, getLockers, deleteLocker ,updateLockerStatus} from '../services/api';
+import { checkSession } from "../../services/authService";
+import { getBranches, getLockers, deleteLocker ,updateLockerStatus} from '../../services/api';
 import { FaPlus } from 'react-icons/fa';
-import './QueueAdmin.css';
-import AddLockerModal from '../components/AddLockerModal';
-import LockerSlotModal from '../components/LockerSlotModal';
+import './../QueueAdmin.css';
+import AddLockerModal from '../../components/AddLockerModal';
+import LockerSlotModal from '../../components/LockerSlotModal';
 
 
 const LockerManagement = () => {

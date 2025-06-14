@@ -176,7 +176,6 @@ export const updateSlot = async (req, res) => {
 export const getPendingLockerDrops = async (req, res) => {
   try {
     const { branch_id } = req.query;
-
     if (!branch_id) {
       return res.status(400).json({ message: "กรุณาระบุรหัสสาขา" });
     }

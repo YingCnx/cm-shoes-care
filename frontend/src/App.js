@@ -21,8 +21,8 @@ import './App.css';
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { useEffect, useState } from 'react'; // ⬅️ เพิ่มตัวนี้ที่ด้านบน
 import ReturnToLocker from './pages/ReturnToLocker';
-import LockerManagement from './pages/LockerManagement';
-import PendingPickupFromLocker from './pages/lockersPages/PendingPickupFromLocker';
+import LockerManagement from './pages/LockersPages/LockerManagement';
+import PendingPickupFromLocker from './pages/LockersPages/PendingPickupFromLocker';
 
 
 

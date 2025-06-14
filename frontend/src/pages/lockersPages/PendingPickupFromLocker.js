@@ -105,7 +105,7 @@ const PendingPickupFromLocker = () => {
                         <th>ช่อง</th>
                         <th>เวลาฝาก</th>
                         <th>สถานะ</th>
-                        <th></th>
+                        <th>ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody>
