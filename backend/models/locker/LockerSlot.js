@@ -1,3 +1,5 @@
+import pool from '../../config/database.js';
+
 class LockerSlot {
   /**
    * 📌 หาช่องว่างของตู้ที่ระบุ (โดยใช้ locker_id)
@@ -27,24 +29,23 @@ class LockerSlot {
   /**
    * 📌 ตรวจสอบ is_closed ของ slot_number (อาจต้องเพิ่ม locker_id ถ้ามีหลายตู้)
    */
-  static async checkSlotClosed(slotNumber) {
+    static async checkSlotClosed(slotId) {
     const result = await pool.query(
-      `SELECT is_closed FROM locker_slots WHERE slot_number = $1`,
-      [slotNumber]
+      `SELECT is_closed FROM locker_slots WHERE id = $1`,
+      [slotId]
     );
-    return result.rows[0] || null;
+    return result;
   }
 
   /**
    * 📌 อัปเดต status เป็น 'used' (สำหรับกรณีใช้งานหลังฝากรองเท้า)
    */
-  static async updateSlotStatus(slot_id) {
-    await pool.query(
-      `UPDATE locker_slots SET status = 'used' WHERE id = $1`,
-      [slot_id]
-    );
-  }
-
+static async updateSlotStatus(slot_id, status) {
+  await pool.query(
+    `UPDATE locker_slots SET status = $1 WHERE id = $2`,
+    [status, slot_id]
+  );
+}
   /**
    * 📌 ตั้งค่า status ช่องตู้เป็นค่าใดก็ได้ (เช่น 'available', 'used', 'error')
    */

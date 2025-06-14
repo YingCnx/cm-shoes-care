@@ -1,6 +1,6 @@
 // middleware/verifyLocker.js
 const ALLOWED_LOCKERS = {
-  LKR010: 'abc123XYZ',
+  'BR02-L002': 'abc123XYZ',
 };
 
 export const verifyLocker = (req, res, next) => {

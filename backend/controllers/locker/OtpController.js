@@ -1,6 +1,6 @@
 
-import LockerDrop from '../../models/locker/LockerDrop.js';
-import { openLockerSlot } from '../../services/hardware.js'; // mock hardware call
+import LockerSlot from '../../models/locker/LockerSlot.js';
+
 // ที่เก็บ OTP แบบชั่วคราวในหน่วยความจำ
 const otpStore = new Map(); // key: phone, value: { otp, expiresAt }
 
@@ -23,7 +23,6 @@ export const sendOTP = (req, res) => {
   res.json({ message: 'ส่ง OTP เรียบร้อย (mock)', otp }); // ส่งกลับมาด้วยกรณี test (ลบตอนขึ้น production)
 };
 
-
 export const verifyOTP = async (req, res) => {
   const { phone, otp } = req.body;
 
@@ -35,35 +34,11 @@ export const verifyOTP = async (req, res) => {
   otpStore.delete(phone);
 
   try {
-    const lockerCode = req.headers['x-locker-id'];
-    const locker_id = parseInt(lockerCode?.slice(-2));
-
-    if (!locker_id) {
-      return res.status(400).json({ message: 'ไม่ได้ระบุ locker_id' });
-    }
-
-    const slot = await findAvailableSlot(locker_id);
-    if (!slot) {
-      return res.status(200).json({ available: false, message: 'ไม่มีช่องว่างในตู้' });
-    }
-
-    // 🟢 เรียกสั่งเปิดช่อง locker
-    await openLockerSlot(slot.slot_number);
-
-    // 🟢 อัปเดตสถานะ is_closed = false
-    await LockerDrop.updateSlotIsClosed(slot.id, false);
-
     res.json({
-      message: 'ยืนยัน OTP สำเร็จ',
-      available: true,
-      slot: {
-        id: slot.id,
-        lockerId: slot.locker_id,
-        number: slot.slot_number,
-      },
+      message: 'ยืนยัน OTP สำเร็จ'
     });
   } catch (err) {
-    console.error('🔴 หา slot ว่างผิดพลาด:', err);
-    res.status(500).json({ message: 'เกิดข้อผิดพลาดขณะค้นหาช่องว่าง' });
+    console.error('🔴 เกิดข้อผิดพลาด:', err);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการยืนยัน OTP' });
   }
 };
