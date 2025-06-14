@@ -98,10 +98,10 @@ const Sidebar = () => {
 
           <h2 className="sidebar-section-title">Smart Locker</h2>
           <ul>
-            <li><Link to="/lockers/pending-pickup"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายการรอรับจากตู้</span>}</Link></li>
-            <li><Link to="/lockers/receive"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รับเข้าจาก Locker</span>}</Link></li>
-            <li><Link to="/returntolocker"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">ส่งคืน Locker</span>}</Link></li>
-            <li><Link to="/lockers"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายการ Locker</span>}</Link></li>
+            <li><Link to="/adminLocker/pending-pickup"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายการรอรับจากตู้</span>}</Link></li>
+            <li><Link to="/adminLocker/receive"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รับเข้าจาก Locker</span>}</Link></li>
+            <li><Link to="/adminLocker/returntolocker"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">ส่งคืน Locker</span>}</Link></li>
+            <li><Link to="/adminLocker/lockers"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายการ Locker</span>}</Link></li>
           </ul>
 
           {isSuperAdmin && (

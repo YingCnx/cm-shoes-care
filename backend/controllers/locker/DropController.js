@@ -1,8 +1,7 @@
-import {
-  insertTransaction,
-  insertLockerDrop,
-  updateSlotStatus,
-} from '../models/DropModel.js';
+
+import LockerDrop from '../../models/locker/LockerDrop.js';
+import LockerSlot from '../../models/locker/LockerSlot.js';
+
 
 export const createLockerDrop = async (req, res) => {
   try {
@@ -16,7 +15,7 @@ export const createLockerDrop = async (req, res) => {
       total_pairs = 1,
     } = req.body;
 
-    const transaction = await insertTransaction({
+    const transaction = await LockerDrop.insertTransaction({
       phone,
       branch_id,
       locker_id,
@@ -24,7 +23,7 @@ export const createLockerDrop = async (req, res) => {
       slot_type,
     });
 
-    await insertLockerDrop({
+    await LockerDrop.insertLockerDrop({
       transaction_id: transaction.id,
       locker_id,
       slot_id,
@@ -32,7 +31,7 @@ export const createLockerDrop = async (req, res) => {
       total_pairs,
     });
 
-    await updateSlotStatus(slot_id);
+    await LockerSlot.updateSlotStatus(slot_id);
 
     res.status(201).json({ message: 'ฝากรองเท้าสำเร็จ', transaction });
   } catch (err) {

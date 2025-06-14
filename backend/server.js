@@ -90,10 +90,9 @@ import customerRoutes from "./routes/customer.js";
 import expenseRoutes from './routes/expense.js';
 import reportRoutes from "./routes/report.js";
 import payoutRoutes from "./routes/payout.js";
-import LockersRoutes from "./routes/lockerRoutes.js";
 import backupRoutes from "./routes/backup.js";
-import lockerOtpRoutes from './routes/locker/otpRoutes.js';
-import lockerDropRoutes from './routes/locker/dropRoutes.js';
+import adminLockerRoutes  from "./routes/lockerRoutes.js";
+import lockerRoutes from './routes/locker/index.js';
 
 // ✅ เชื่อม Route หลัก
 app.use('/api/auth', authRoutes);
@@ -108,10 +107,9 @@ app.use("/api/customers", customerRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/payouts", payoutRoutes);
 app.use("/api/reports", reportRoutes);
-app.use("/api/lockers", LockersRoutes);
 app.use("/api/backup", backupRoutes);
-app.use('/api/locker/otp', lockerOtpRoutes);
-app.use('/api/locker/drop', lockerDropRoutes);
+app.use("/api/adminLocker", adminLockerRoutes );
+app.use('/api/locker', lockerRoutes);
 
 // ✅ Global Error Handler
 app.use((err, req, res, next) => {

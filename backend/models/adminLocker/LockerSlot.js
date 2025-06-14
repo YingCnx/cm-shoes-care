@@ -1,6 +1,7 @@
-import pool from "../config/database.js";
+import pool from "../../config/database.js";
 
 class LockerSlot {
+  
   // 📌 ดึง slot ทั้งหมดของ locker
 static async getByLocker(lockerId) {
   const result = await pool.query(

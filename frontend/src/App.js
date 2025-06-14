@@ -206,7 +206,7 @@ function MainLayout() {
           />
 
           <Route
-            path="/returntolocker"
+            path="/adminLocker/returntolocker"
             element={
               <ProtectedRoute>
                 <ReturnToLocker />
@@ -215,7 +215,7 @@ function MainLayout() {
           />
 
           <Route
-            path="/Lockers"
+            path="/adminLocker/Lockers"
             element={
               <ProtectedRoute>
                 <LockerManagement />
@@ -224,7 +224,7 @@ function MainLayout() {
           />
 
           <Route 
-            path="/lockers/pending-pickup"
+            path="/adminLocker/pending-pickup"
             element={
             <ProtectedRoute>
               <PendingPickupFromLocker />

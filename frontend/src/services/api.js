@@ -183,29 +183,29 @@ export const updatePayout = (id, data) => API.put(`/payouts/${id}`, data);
 export const deletePayout = (id) => API.delete(`/payouts/${id}`);
 
 //======================= 🔒 Lockers =======================//
-export const getLockers = (branch_id) => API.get("/lockers", { params: { branch_id } });
-export const createLocker = (data) => API.post("/lockers", data);
-export const updateLockerStatus = (id, data) => API.put(`/lockers/${id}/status`, data);
-export const updateLocker = (id, data) => API.put(`/lockers/${id}`, data);
-export const deleteLocker = (id) => API.delete(`/lockers/${id}`);
+export const getLockers = (branch_id) => API.get("/adminLocker", { params: { branch_id } });
+export const createLocker = (data) => API.post("/adminLocker", data);
+export const updateLockerStatus = (id, data) => API.put(`/adminLocker/${id}/status`, data);
+export const updateLocker = (id, data) => API.put(`/adminLocker/${id}`, data);
+export const deleteLocker = (id) => API.delete(`/adminLocker/${id}`);
 
 
 
 export const getLockerSlots = (lockerId) =>
-  API.get(`/lockers/${lockerId}/slots`);
+  API.get(`/adminLocker/${lockerId}/slots`);
 
 export const updateSlotStatus = (slotId, status) =>
-  API.put(`/lockers/slots/${slotId}`, { status });
+  API.put(`/adminLocker/slots/${slotId}`, { status });
 
 // ดึงรายการฝากรองเท้าที่ยังไม่ถูกรับจากสาขา
 export const getPendingLockerDrops = (branchId) =>
-  API.get(`/locker-drop/pending`, {
+  API.get(`adminLocker/locker-drop/pending`, {
     params: { branch_id: branchId },
   });
 
 // อัปเดตสถานะของ locker_drop เช่น 'received', 'cancelled'
 export const updateLockerDropStatus = (dropId, status) =>
-  API.put(`/locker-drop/${dropId}/status`, { status });
+  API.put(`adminLocker/locker-drop/${dropId}/status`, { status });
 
 
 
