@@ -8,7 +8,7 @@ import { createCanvas } from 'canvas';
 // ✅ 1️⃣ เพิ่มคิวใหม่
 export const createQueue = async (req, res) => {
   try {
-      const {customer_id, customer_name, phone, location, total_pairs, received_date, delivery_date, branch_id, source } = req.body;
+      const {customer_id, customer_name, phone, location, total_pairs, received_date, delivery_date, branch_id, source,locker_id, slot_id } = req.body;
 
       if (!customer_id || !customer_name || !phone || !total_pairs|| !received_date || !delivery_date || !branch_id) {
           return res.status(400).json({ message: "❌ กรุณากรอกข้อมูลให้ครบถ้วน" });
@@ -24,7 +24,9 @@ export const createQueue = async (req, res) => {
           received_date,
           delivery_date,
           branch_id,
-          source
+          source,
+          locker_id,
+          slot_id
       });
 
       res.status(201).json({ message: "✅ คิวถูกสร้างเรียบร้อย", queue_id });

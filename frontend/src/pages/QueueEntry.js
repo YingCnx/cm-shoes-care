@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { checkSession } from "../services/authService";
 import { useNavigate } from 'react-router-dom';
-import { getAppointments, createQueue, updateAppointmentQueueId, getBranches, getCustomers, createCustomer } from '../services/api';
+import { getAppointments, createQueue, updateAppointmentQueueId, getBranches, getCustomers, createCustomer, getAllLockerDrops ,updateLockerDropQueueId} from '../services/api';
 import '../assets/css/bootstrap.min.css';
 import './QueueEntry.css';
 import Select from "react-select";
@@ -15,6 +15,7 @@ const QueueEntry = () => {
     const [isAdmin, setIsAdmin] = useState(false);
 
     const [appointments, setAppointments] = useState([]);
+    const [lockerDrops, setLockerDrops] = useState([]);
     const [branches, setBranches] = useState([]);
     const [customerName, setCustomerName] = useState('');
     const [phone, setPhone] = useState('');
@@ -31,7 +32,13 @@ const QueueEntry = () => {
         threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
         return threeDaysFromNow.toLocaleDateString('en-CA'); // YYYY-MM-DD format
     });
+
+    const [lockerId, setLockerId] = useState(null);
+    const [slotId, setSlotId] = useState(null);
+
     const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
+    const [selectedLockerDropId, setSelectedLockerDropId] = useState(null);
+
     const [selectedBranch, setSelectedBranch] = useState("");
 
     const [customers, setCustomers] = useState([]);
@@ -40,6 +47,7 @@ const QueueEntry = () => {
     const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
     const [branchesForModal, setBranchesForModal] = useState([]);
 
+    
     useEffect(() => {
         const init = async () => {
             const sessionUser = await checkSession();
@@ -67,10 +75,12 @@ const QueueEntry = () => {
 
     useEffect(() => {
         if (selectedBranch) {
+          fetchLockerDrops(selectedBranch);
             fetchAppointments(selectedBranch);
             fetchCustomers(selectedBranch);
         }
         else {
+            fetchLockerDrops();
             fetchAppointments();
         }
     }, [selectedBranch]);
@@ -85,6 +95,16 @@ const QueueEntry = () => {
             console.error("🔴 Error loading customers:", err);
         }
     };
+
+  const fetchLockerDrops = async (branchId) => {
+  try {
+    const res = await getAllLockerDrops(branchId);
+    setLockerDrops(res.data);
+  } catch (err) {
+    console.error("🔴 Error fetching locker drops:", err);
+  }
+};
+
 
     const fetchAppointments = async (branchId) => {
         try {
@@ -141,7 +161,9 @@ const QueueEntry = () => {
                 total_pairs: totalPairs,
                 received_date: recieveDate,
                 delivery_date: deliveryDate,
-                branch_id
+                branch_id,
+                locker_id: lockerId,
+                slot_id: slotId
             };
 
             const response = await createQueue(newQueue);
@@ -149,6 +171,10 @@ const QueueEntry = () => {
 
             if (selectedAppointmentId) {
                 await updateAppointmentQueueId(selectedAppointmentId, queue_id);
+            }
+
+            if(selectedLockerDropId) {
+                await updateLockerDropQueueId(selectedLockerDropId, queue_id);
             }
 
             alert("✅ เพิ่มคิวงานเรียบร้อยแล้ว!");
@@ -184,6 +210,7 @@ const QueueEntry = () => {
     };
 
     const handleSelectAppointment = (appointment) => {
+        handleClearForm();
         setCustomerId(appointment.customer_id);
         setCustomerName(appointment.customer_name);
         setPhone(appointment.phone);
@@ -193,15 +220,29 @@ const QueueEntry = () => {
         setSelectedAppointmentId(appointment.id);
     };
 
+    const handleSelectLocker = (drop) => {
+      handleClearForm();
+      setCustomerId(drop.customer_id);
+      setCustomerName(drop.customer_name);
+      setPhone(drop.phone);
+      setSource("locker");
+      setLocation(`Locker ${drop.locker_name}`);
+      setTotalPairs(drop.total_pairs || 1);
+      setSelectedLockerDropId(drop.id);
+      setLockerId(drop.locker_id);
+      setSlotId(drop.slot_id);
+    };
+
     const handleClearForm = () => {
         setCustomerId('');
         setCustomerName('');
         setPhone('');
+        setSource('');
         setLocation('Walk-in');
         setTotalPairs(1);
         setDeliveryDate(() => {
             const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setDate(tomorrow.getDate() + 3);
             return tomorrow.toISOString().split('T')[0];
         });
         setSelectedAppointmentId(null);
@@ -219,7 +260,8 @@ const QueueEntry = () => {
   <div className="queue-flex-wrapper">
     
     {/* ฝั่งซ้าย: เลือกจากนัดหมาย */}
-    <div className="queue-left">
+    <div className="queue-left d-flex flex-column" style={{ height: '100%' }}>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
       <h2 className="mb-3">📅 เลือกจากนัดหมาย</h2>
       {isAdmin && (
         <div className="mb-3">
@@ -236,6 +278,7 @@ const QueueEntry = () => {
               </option>
             ))}
           </select>
+          
         </div>
       )}
 
@@ -267,6 +310,43 @@ const QueueEntry = () => {
         </tbody>
       </table>
     </div>
+
+    {/* ส่วนล่าง: Locker */}
+  <div style={{ flex: 1, overflowY: 'auto', borderTop: '2px solid #ddd', marginTop: '1rem', paddingTop: '1rem' }}>
+    <h2 className="mb-3">📦 เลือกจาก Locker</h2>
+    {/* ✅ TODO: เพิ่มตาราง lockerDrop ที่ fetch มา */}
+    <table className="table table-hover">
+      <thead>
+        <tr>
+          <th>ชื่อ</th>
+          <th>เบอร์โทร</th>
+          <th>ตู้</th>
+          <th>จำนวนคู่</th>
+          <th>เลือก</th>
+        </tr>
+      </thead>
+      <tbody>
+        {lockerDrops.map(drop => (
+          <tr key={drop.id}>
+            <td>{drop.customer_name || '-'}</td>
+            <td>{drop.phone}</td>
+            <td>Locker {drop.locker_name}</td>
+            <td>{drop.total_pairs}</td>
+            <td>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => handleSelectLocker(drop)}
+              >
+                เลือก
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  </div>
+
 
     {/* ฝั่งขวา: เพิ่มคิวใหม่ */}
     <div className="queue-right">

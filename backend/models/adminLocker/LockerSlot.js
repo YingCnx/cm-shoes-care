@@ -34,7 +34,7 @@ static async getByLocker(lockerId) {
   }
 
   // 📌 อัปเดตสถานะ slot
-  static async update(slotId, status) {
+  static async updateStatus(slotId, status) {
     const result = await pool.query(
       `UPDATE locker_slots SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
       [status, slotId]

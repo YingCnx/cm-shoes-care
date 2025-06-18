@@ -72,6 +72,45 @@ static async update(id, { name, phone, address, status, notes, branch_id, origin
     );
     return rows.length > 0;
   }
+
+static async findCustomerByPhone(phone) {
+  const { rows } = await pool.query(
+    `SELECT * FROM customers WHERE phone = $1 LIMIT 1`,
+    [phone]
+  );
+  return rows[0]; // ✅ return object (อาจ undefined ถ้าไม่เจอ)
+}
+
+static async createFromLocker({ phone, branch_id,locker_name }) {
+  // 1️⃣ Insert พร้อมดึง branch_id กลับมาด้วย
+  const insertResult = await pool.query(
+    `INSERT INTO customers (name, phone, address, notes, branch_id, status, origin_source, created_at)
+     VALUES ($1, $1,'Locker ' || $2, '', $3, 'active', 'locker', NOW())
+     RETURNING id, branch_id`,
+    [phone, locker_name, branch_id]
+  );
+
+  const newCustomer = insertResult.rows[0];
+
+  // 2️⃣ สร้าง customer_code แบบ C<สาขา><id 3 หลัก>
+  const customerCode = `C${newCustomer.branch_id}${String(newCustomer.id).padStart(3, '0')}`;
+
+  // 3️⃣ อัปเดต customer_code
+  await pool.query(
+    `UPDATE customers SET customer_code = $1 WHERE id = $2`,
+    [customerCode, newCustomer.id]
+  );
+
+  // 4️⃣ ดึงข้อมูลเต็มคืนกลับ
+  const { rows } = await pool.query(
+    `SELECT * FROM customers WHERE id = $1`,
+    [newCustomer.id]
+  );
+
+  return rows[0];
+}
+
+
 }
 
 export default Customer;

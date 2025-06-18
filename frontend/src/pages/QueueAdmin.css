@@ -215,3 +215,10 @@ body {
 .btn-split:hover .btn-icon {
   background-color: #1976d2;
 }
+
+.td-hide {
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

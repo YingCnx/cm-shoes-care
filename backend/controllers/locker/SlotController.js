@@ -43,7 +43,7 @@ console.log("lockercode",lockerCode);
 
   await openLockerSlot(slot.slot_number);
   await LockerSlot.updateSlotIsClosed(slot.id, false);
-  await LockerSlot.updateSlotStatus(slot.id, 'using');
+  await LockerSlot.updateSlotStatus(slot.id, 'available');
 
   const transaction = await LockerDrop.insertTransaction({
     phone,

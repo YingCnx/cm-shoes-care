@@ -7,6 +7,10 @@ import Branch from "../models/Branch.js";
 
 import Queue from "../models/Queue.js";
 
+import Transaction from "../models/adminLocker/Transaction.js";
+import Customer from "../models/Customer.js";
+
+
 
 // 📌 ดึงข้อมูลตู้ทั้งหมด (ตามสาขา หรือทุกตู้ถ้าเป็น superadmin)
 export const getAllLockers = async (req, res) => {
@@ -229,11 +233,79 @@ export const getLockerDropById = async (req, res) => {
 // ✅ GET all (admin only)
 export const getAllLockerDrops = async (req, res) => {
   try {
-    const drops = await LockerDrop.getAll();
-    res.status(200).json(drops);
+    const branch_id = parseInt(req.query.branch_id);
+    if (!branch_id) {
+      return res.status(400).json({ message: "กรุณาระบุ branch_id" });
+    }
+
+    const drops = await LockerDrop.getUnqueuedByBranch(branch_id);
+    res.json(drops);
+  } catch (err) {
+    console.error("❌ getAllLockerDrops error:", err);
+    res.status(500).json({ message: "เกิดข้อผิดพลาด", error: err.message });
+  }
+};
+
+export const updateStatusWithImage = async (req, res) => {
+  const { id } = req.params; // transaction_id
+  const file = req.file;
+
+  try {
+    // 1️⃣ ดึงข้อมูล transaction
+    const tx = await Transaction.getById(id);
+    if (!tx) return res.status(404).json({ message: "ไม่พบ transaction" });
+
+    // 2️⃣ ดึงหรือสร้าง customer
+    let customer = await Customer.findCustomerByPhone(tx.phone);
+
+    if (!customer) {
+      customer = await Customer.createFromLocker({
+        phone: tx.phone,
+        branch_id: tx.branch_id,
+        locker_name: tx.locker_name
+      });
+    }
+
+    if (!customer?.id) {
+      throw new Error("ไม่พบหรือลูกค้าไม่มี id");
+    }
+
+    // 3️⃣ เตรียม path รูป
+    const imageUrl = file ? `/uploads/${file.filename}` : null;
+
+    // 4️⃣ บันทึก locker_drop
+    const drop = await LockerDrop.create({
+      customer_id: customer.id,
+      transaction_id: tx.id,
+      locker_id: tx.locker_id,
+      slot_id: tx.slot_id,
+      proof_image_url: imageUrl
+    });
+
+    // 5️⃣ อัปเดต status ของ transaction
+    await Transaction.updateStatus(tx.id, 'received');
+
+    await LockerSlot.updateStatus(tx.slot_id, 'available');
+
+
+    return res.status(200).json({ message: "รับรองเท้าสำเร็จ", locker_drop: drop });
+
+  } catch (err) {
+    console.error("❌ updateStatusWithImage error:", err);
+    return res.status(500).json({ message: "เกิดข้อผิดพลาด", error: err.message });
+  }
+};
+
+export const updateLockerDropQueueId = async (req, res) => {
+  const { id } = req.params;
+  const { queue_id } = req.body;
+
+  try {
+    const result = await LockerDrop.updateQueueId(id, queue_id);
+    res.json(result);
   } catch (error) {
-    console.error("🔴 Error fetching all locker drops:", error.message);
-    res.status(500).json({ message: "ไม่สามารถดึงรายการฝากตู้ทั้งหมดได้" });
+    console.error("updateLockerDropQueueId error:", error);
+    res.status(500).json({ error: "ไม่สามารถอัปเดต queue_id ได้" });
   }
 };
 

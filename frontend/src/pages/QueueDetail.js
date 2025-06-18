@@ -592,8 +592,6 @@ const QueueDetail = () => {
                 <span className="text-muted">
                     {queue.locker_code} - {queue.locker_name}
                 </span>{" "}
-                | <strong>ช่อง:</strong>{" "}
-                <span className="text-muted">{queue.slot_id}</span>
                 </div>
             )}
             </div>

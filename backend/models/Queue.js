@@ -3,13 +3,13 @@ import pool from "../config/database.js";
   class Queue {
 
    // ✅ ฟังก์ชันสร้าง Queue ใหม่
-   static async create({customer_id, customer_name, phone, location, total_pairs, total_price = 0,received_date, delivery_date, branch_id,source }) {
+   static async create({customer_id, customer_name, phone, location, total_pairs, total_price = 0,received_date, delivery_date, branch_id,source,locker_id,slot_id }) {
     try {
         const result = await pool.query(
-            `INSERT INTO queue (customer_id,customer_name, phone, location, total_pairs, total_price, delivery_date, branch_id, status, received_date, source) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7,$8, 'รับเข้า', $9, $10) 
+            `INSERT INTO queue (customer_id,customer_name, phone, location, total_pairs, total_price, delivery_date, branch_id, status, received_date, source, locker_id, slot_id) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7,$8, 'รับเข้า', $9, $10, $11, $12) 
              RETURNING id`, // ✅ ต้องแน่ใจว่า column ที่ใส่ค่ามีครบ
-            [customer_id,customer_name, phone, location, total_pairs, total_price, delivery_date, branch_id,received_date,source]
+            [customer_id,customer_name, phone, location, total_pairs, total_price, delivery_date, branch_id,received_date,source,locker_id,slot_id]
         );
         return result.rows[0].id; // ✅ Return queue_id
     } catch (error) {
@@ -212,14 +212,26 @@ import pool from "../config/database.js";
 
 
   // ✅ ลบคิว (เฉพาะที่ยังไม่ส่งสำเร็จ)
-  static async delete(id) {
-    try {
-      await pool.query(`DELETE FROM queue WHERE id = $1 AND status != 'จัดส่งสำเร็จ'`, [id]);
-      return { message: "Queue deleted successfully!" };
-    } catch (error) {
-      throw new Error(`🔴 Error deleting queue: ${error.message}`);
-    }
+static async delete(id) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1️⃣ อัปเดต locker_drop ให้ queue_id = null ก่อน
+    await client.query(`UPDATE locker_drop SET queue_id = NULL WHERE queue_id = $1`, [id]);
+
+    // 2️⃣ ลบ queue ถ้า status ยังไม่ใช่ 'จัดส่งสำเร็จ'
+    await client.query(`DELETE FROM queue WHERE id = $1 AND status != 'จัดส่งสำเร็จ'`, [id]);
+
+    await client.query('COMMIT');
+    return { message: "✅ Queue deleted successfully!" };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw new Error(`🔴 Error deleting queue: ${error.message}`);
+  } finally {
+    client.release();
   }
+}
 
   //อัพเดทจำนวนรองเท้า
   static async updateTotalPairs(queue_id, total_pairs) {

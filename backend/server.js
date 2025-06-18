@@ -74,6 +74,7 @@ const setCORSHeaders = (res, path) => {
   res.set("Cross-Origin-Resource-Policy", "cross-origin");
 };
 
+
 app.use("/uploads", express.static("uploads", { setHeaders: setCORSHeaders }));
 app.use("/public", express.static("public", { setHeaders: setCORSHeaders }));
 
@@ -110,6 +111,8 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/backup", backupRoutes);
 app.use("/api/adminLocker", adminLockerRoutes );
 app.use('/api/locker', lockerRoutes);
+
+
 
 // ✅ Global Error Handler
 app.use((err, req, res, next) => {

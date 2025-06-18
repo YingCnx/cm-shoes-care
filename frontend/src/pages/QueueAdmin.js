@@ -232,7 +232,7 @@ const QueueAdmin = () => {
                                 <td>{index + 1}</td>
                                 <td className="text-start"><small className="text-muted">{item.source}</small></td>
                                 <td>{item.customer_name}</td>
-                                <td>{item.location}</td>
+                                <td class="td-hide">{item.location}</td>
                                 <td>{item.total_pairs}</td>
                                 <td>{item.total_price}</td>
                                 <td>{new Date(item.received_date).toLocaleDateString()}</td>

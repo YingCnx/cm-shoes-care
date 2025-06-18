@@ -198,16 +198,42 @@ export const updateSlotStatus = (slotId, status) =>
   API.put(`/adminLocker/slots/${slotId}`, { status });
 
 // ดึงรายการฝากรองเท้าที่ยังไม่ถูกรับจากสาขา
-export const getPendingLockerDrops = (branchId) =>
-  API.get(`adminLocker/locker-drop/pending`, {
-    params: { branch_id: branchId },
+export const getPendingLockerDrops = async (branchId) => {
+  return await API.get(`/adminLocker/locker-drop/pending`, {
+    params: { branch_id: branchId }
   });
+};
+
 
 // อัปเดตสถานะของ locker_drop เช่น 'received', 'cancelled'
 export const updateLockerDropStatus = (dropId, status) =>
   API.put(`adminLocker/locker-drop/${dropId}/status`, { status });
 
 
+export const updateLockerDropWithImage = async (dropId, file) => {
+  const formData = new FormData();
+  formData.append('proof_image', file);
+  formData.append('status', 'received'); // ✅ สำคัญ
+  const response = await API.put(
+    `/adminLocker/locker-drop/${dropId}/status-with-image`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+
+  return response.data;
+};
+
+export const getAllLockerDrops = async (branchId) => {
+  return await API.get(`/adminLocker/locker-drop/`, {
+    params: { branch_id: branchId }
+  });
+};
+
+export const updateLockerDropQueueId  = (id, queue_id) => API.put(`/adminLocker/locker-drop/${id}/queue-id`, { queue_id });
 
 //======================= 👥 Reports =======================//
 export const getReports = ({ branch_id, report_type, start_date, end_date }) => {
