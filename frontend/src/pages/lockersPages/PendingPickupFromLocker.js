@@ -138,6 +138,7 @@ const PendingPickupFromLocker = () => {
                     <tr>
                         <th>#</th>
                         <th>เบอร์โทร</th>
+                        <th>จำนวนคู่</th>
                         <th>ตู้</th>
                         <th>ช่อง</th>
                         <th>เวลาฝาก</th>
@@ -157,6 +158,7 @@ const PendingPickupFromLocker = () => {
                             <tr key={drop.id}>
                                 <td>{index + 1}</td>
                                 <td>{drop.phone}</td>
+                                <td>{drop.total_pairs}</td>
                                 <td>{drop.locker_name}</td>
                                 <td>{drop.slot_number}</td>
                                 <td>{new Date(drop.created_at).toLocaleString()}</td>

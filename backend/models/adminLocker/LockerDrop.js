@@ -6,6 +6,7 @@ class LockerDrop {
     SELECT 
         t.id, 
         t.phone, 
+        t.total_pairs,
         t.branch_id, 
         t.locker_id, 
         l.name AS locker_name, 
@@ -77,15 +78,15 @@ static async updateLockerDropWithImage(id, status, imageUrl) {
 }
 
 
-  static async create({ customer_id, transaction_id, locker_id, slot_id, proof_image_url }) {
+  static async create({ customer_id, transaction_id, locker_id, slot_id, proof_image_url,total_pairs }) {
     const result = await pool.query(`
       INSERT INTO locker_drop (
         customer_id, transaction_id, locker_id, slot_id,
-        status, proof_image_url, created_at, updated_at
+        status, proof_image_url, created_at, updated_at,total_pairs
       )
-      VALUES ($1, $2, $3, $4, 'received', $5, NOW(), NOW())
+      VALUES ($1, $2, $3, $4, 'received', $5, NOW(), NOW(), $6)
       RETURNING *
-    `, [customer_id, transaction_id, locker_id, slot_id, proof_image_url]);
+    `, [customer_id, transaction_id, locker_id, slot_id, proof_image_url,total_pairs]);
 
     return result.rows[0];
   }
@@ -111,7 +112,7 @@ static async getUnqueuedByBranch(branch_id) {
     JOIN locker_slots s ON ld.slot_id = s.id
     WHERE t.branch_id = $1
       AND ld.queue_id IS NULL
-    ORDER BY ld.created_at DESC
+    ORDER BY ld.created_at DESC, ld.locker_id ASC
   `, [branch_id]);
 
   return result.rows;

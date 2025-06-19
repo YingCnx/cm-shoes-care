@@ -279,7 +279,8 @@ export const updateStatusWithImage = async (req, res) => {
       transaction_id: tx.id,
       locker_id: tx.locker_id,
       slot_id: tx.slot_id,
-      proof_image_url: imageUrl
+      proof_image_url: imageUrl,
+      total_pairs: tx.total_pairs
     });
 
     // 5️⃣ อัปเดต status ของ transaction
