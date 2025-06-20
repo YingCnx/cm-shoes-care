@@ -24,7 +24,7 @@ class LockerDrop {
     LEFT JOIN 
         locker_slots s ON t.slot_id = s.id
     WHERE 
-        t.branch_id = $1 AND t.status = 'pending'
+        t.branch_id = $1 AND t.status = 'dropped'
     ORDER BY 
         t.locker_id
     `, [branch_id]);

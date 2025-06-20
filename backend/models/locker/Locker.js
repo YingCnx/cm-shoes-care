@@ -3,7 +3,7 @@ import pool from '../../config/database.js';
 class Locker {
   static async getLockerByCode(lockerCode) {
     const result = await pool.query(
-      `SELECT id AS locker_id, branch_id, secret_key FROM lockers WHERE code = $1`,
+      `SELECT id AS locker_id, name AS locker_name, branch_id, secret_key FROM lockers WHERE code = $1`,
       [lockerCode]
     );
 
@@ -11,6 +11,8 @@ class Locker {
 
     return result.rows[0]; // { locker_id, branch_id, secret_key }
   }
+
 }
+
 
 export default Locker;

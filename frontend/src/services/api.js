@@ -247,6 +247,10 @@ export const logout = () => API.post("/auth/logout");
 
 export const backupdb = () => API.get("/backup", { responseType: "blob" })
 
+export const getNotifications = () => API.get('/notifications');
+
+export const markNotificationAsRead = (id) =>
+  API.put(`/notifications/${id}/read`);
 
 
 export default API;

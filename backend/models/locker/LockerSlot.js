@@ -7,10 +7,10 @@ class LockerSlot {
   static async findAvailableSlot(locker_id) {
     const result = await pool.query(
       `SELECT id, locker_id, slot_number 
-       FROM locker_slots 
-       WHERE status = 'available' AND locker_id = $1
-       ORDER BY slot_number ASC 
-       LIMIT 1`,
+     FROM locker_slots 
+     WHERE status = 'available' AND locker_id = $1
+     ORDER BY RANDOM() 
+     LIMIT 1`,
       [locker_id]
     );
     return result.rows[0] || null;
@@ -67,6 +67,15 @@ static async updateSlotStatus(slot_id, status) {
     const slot = result.rows[0];
     return slot && slot.status === 'available' && slot.is_closed === false;
   }
+
+  static async getById(slot_id) {
+    const result = await pool.query(
+      `SELECT * FROM locker_slots WHERE id = $1`,
+      [slot_id]
+    );
+    return result.rows[0];
+  }
+
 }
 
 export default LockerSlot;

@@ -6,6 +6,7 @@ class LockerDrop {
    */
 static async insertTransaction({
   phone,
+  total_pairs,
   branch_id,
   locker_id,
   slot_id,
@@ -15,9 +16,9 @@ static async insertTransaction({
 }) {
   const result = await pool.query(
     `INSERT INTO transactions (
-      phone, branch_id, locker_id, slot_id, slot_type, status, queue_id
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-    [phone, branch_id, locker_id, slot_id, slot_type, status, queue_id]
+      phone, total_pairs, branch_id, locker_id, slot_id, slot_type, status, queue_id
+    ) VALUES ($1, $8, $2, $3, $4, $5, $6, $7) RETURNING *`,
+    [phone, branch_id, locker_id, slot_id, slot_type, status, queue_id,total_pairs]
   );
   return result.rows[0];
 }

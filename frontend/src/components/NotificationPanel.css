@@ -1,0 +1,349 @@
+/* Notification.css - Facebook Style Notification System */
+
+/* Container หลัก */
+.notification-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* ปุ่มระฆัง */
+.notification-bell {
+  position: relative;
+  padding: 8px;
+  background: #1877f2;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.3);
+}
+
+.notification-bell:hover {
+  background: #166fe5;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(24, 119, 242, 0.4);
+}
+
+.notification-bell:active {
+  transform: translateY(0);
+}
+
+/* Badge แสดงจำนวน */
+.notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #e74c3c;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 50%;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse 2s infinite;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Loading indicator */
+.notification-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(24, 119, 242, 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid white;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Panel แจ้งเตือน */
+.notification-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  width: 320px;
+  max-width: 90vw;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e7eb;
+  z-index: 1000;
+  max-height: 400px;
+  overflow: hidden;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header ของ Panel */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.panel-close-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  color: #6b7280;
+}
+
+.panel-close-btn:hover {
+  background: #e5e7eb;
+}
+
+/* รายการแจ้งเตือน */
+.panel-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.panel-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.panel-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.panel-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.panel-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* รายการแจ้งเตือนแต่ละตัว */
+.panel-item {
+  position: relative;
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.panel-item:hover {
+  background: #f9fafb;
+}
+
+.panel-item:last-child {
+  border-bottom: none;
+}
+
+/* แจ้งเตือนที่ยังไม่อ่าน */
+.panel-item.unread {
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+}
+
+.panel-item.unread .panel-message {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+/* แจ้งเตือนที่อ่านแล้ว */
+.panel-item.read .panel-message {
+  color: #6b7280;
+}
+
+/* ข้อความแจ้งเตือน */
+.panel-message {
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+/* เวลา */
+.panel-time {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* ปุ่มอ่านแล้ว */
+.read-btn {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  font-size: 16px;
+}
+
+.read-btn:hover {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* จุดแสดงสถานะยังไม่อ่าน */
+.unread-dot {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  background: #3b82f6;
+  border-radius: 50%;
+}
+
+/* Empty state */
+.notification-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #9ca3af;
+}
+
+.notification-empty-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+  color: #d1d5db;
+}
+
+/* Footer */
+.panel-footer {
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.panel-footer-btn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.panel-footer-btn:hover {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .notification-panel {
+    width: 280px;
+    right: -20px;
+  }
+  
+  .panel-item {
+    padding: 12px;
+  }
+  
+  .panel-message {
+    font-size: 13px;
+  }
+  
+  .panel-time {
+    font-size: 11px;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .notification-panel {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .panel-header {
+    background: #111827;
+    color: #f9fafb;
+    border-color: #374151;
+  }
+  
+  .panel-item {
+    border-color: #374151;
+  }
+  
+  .panel-item:hover {
+    background: #374151;
+  }
+  
+  .panel-item.unread {
+    background: #1e3a8a;
+    border-left-color: #60a5fa;
+  }
+  
+  .panel-item.unread .panel-message {
+    color: #f9fafb;
+  }
+  
+  .panel-item.read .panel-message {
+    color: #9ca3af;
+  }
+  
+  .panel-time {
+    color: #6b7280;
+  }
+  
+  .panel-footer {
+    background: #111827;
+    border-color: #374151;
+  }
+  
+  .read-btn:hover {
+    background: #1e40af;
+  }
+}

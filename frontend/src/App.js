@@ -23,6 +23,7 @@ import { useEffect, useState } from 'react'; // ⬅️ เพิ่มตัว�
 import ReturnToLocker from './pages/ReturnToLocker';
 import LockerManagement from './pages/LockersPages/LockerManagement';
 import PendingPickupFromLocker from './pages/LockersPages/PendingPickupFromLocker';
+import NotificationPanel from './components/NotificationPanel';
 
 
 
@@ -66,14 +67,17 @@ function MainLayout() {
         {!hideSidebar && (
           <div className="topbar">
             <div className="fw-bold">CM SHOES CARE ระบบจัดการร้านซักเกิบแอนด์สปา</div>
-            <div><p className="text-gray-600 text-sm mt-1">
+            <div style={{ transform: 'translateX(-40px)' }}>
+              <p className="text-gray-600 text-sm mt-1">
                 {currentTime.toLocaleDateString('th-TH', {
                   weekday: 'long',
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
                 })} - {currentTime.toLocaleTimeString('th-TH')}
-              </p></div>
+              </p>
+            </div>
+              <NotificationPanel />
           </div>
         )}
 
