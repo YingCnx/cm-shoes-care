@@ -1,12 +1,21 @@
-// controllers/notificationController.js
+// 📁 controllers/notificationController.js
 import Notification from '../models/Notification.js';
 
 export const createNotification = async (req, res) => {
   try {
     const { type, message } = req.body;
+
+    // 🟢 บันทึกลงฐานข้อมูล
     const notification = await Notification.insert({ type, message });
+
+    // 📢 ส่ง event ไปยัง frontend
+    const io = req.app.get('io');
+    io.emit('new-notification', notification);
+
+    // ✅ ตอบกลับ client
     res.json(notification);
   } catch (err) {
+    console.error('❌ createNotification error:', err);
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการสร้างแจ้งเตือน' });
   }
 };

@@ -21,7 +21,7 @@ const Dashboard = () => {
   const [payoutsMonthly, setPayoutsMonthly] = useState({ totalPayoutMonthly: 0 }); // New state for monthly payouts
 
   const [branches, setBranches] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState([null]);
+  const [selectedBranch, setSelectedBranch] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date()); // ✅ Add state for current time
 
@@ -42,12 +42,10 @@ const Dashboard = () => {
     'สำเร็จ': '#C8E6C9',
   };
 
-  useEffect(() => {
+useEffect(() => {
   const init = async () => {
     const user = await checkSession();
-
     if (!user) {
-      // ✅ ป้องกัน error: ทำผ่าน setTimeout หรือลบ navigate
       setTimeout(() => navigate('/login'), 0);
       return;
     }
@@ -55,8 +53,8 @@ const Dashboard = () => {
     const isSuperAdmin = user.role === "superadmin";
 
     if (isSuperAdmin) {
-      fetchBranches();
-    } else {
+      fetchBranches(); // จะรอให้ superadmin เลือกสาขาเอง
+    } else if (user.branch_id) {
       setSelectedBranch(user.branch_id);
       fetchQueueData(user.branch_id);
       fetchAppointmentData(user.branch_id);        
@@ -67,7 +65,8 @@ const Dashboard = () => {
   };
 
   init();
-}, [navigate]);
+}, []);
+
 
 
 
@@ -105,7 +104,6 @@ const Dashboard = () => {
     //console.log("📌 Debug: Fetching appointment data for branchId =", branchId);
     const res = await getAppointments(branchId);
     const filteredAppointments = res.data.filter(appt => appt.status !== "สำเร็จ");
-    //console.log("✅ Debug: Appointment Data", res.data);
     setAppointments(filteredAppointments);
 
     fetchAnnouncement(filteredAppointments);
@@ -118,6 +116,7 @@ const Dashboard = () => {
 };
 
 const fetchAnnouncement = async (dtappointment) => {
+
   try {
     const today = new Date().toLocaleDateString('en-CA');
 
@@ -137,7 +136,6 @@ const fetchAnnouncement = async (dtappointment) => {
 
         return dateA - dateB;
       });
-
     if (todayAppointments.length > 0) {
       setAnnouncementData(todayAppointments);
       setShowAnnouncement(true);
@@ -283,14 +281,16 @@ const getPayoutsMonthly = async (branchId) => {
   }
 };
 
-  const handleBranchChange = (e) => {
-    const branchId = e.target.value;
-    setSelectedBranch(branchId);
-    fetchQueueData(branchId);
-    fetchAppointmentData(branchId);
-    getIncomesMonthly(branchId);
-    getPayoutsMonthly(branchId);
-  };
+const handleBranchChange = (e) => {
+  const branchId = e.target.value;
+  if (branchId === selectedBranch) return; // ✅ ป้องกันเรียกซ้ำ
+  setSelectedBranch(branchId);
+
+  fetchQueueData(branchId);
+  fetchAppointmentData(branchId);
+  getIncomesMonthly(branchId);
+  getPayoutsMonthly(branchId);
+};
 
 const handleBackup = async () => {
   try {
@@ -317,7 +317,11 @@ const handleBackup = async () => {
             {branches.length > 0 && (
               <div className="mb-3">
                 <label className="form-label">เลือกสาขา</label>
-                <select className="form-control" value={selectedBranch || ''} onChange={handleBranchChange}>
+                <select
+                  className="form-control"
+                  value={selectedBranch || ''}
+                  onChange={handleBranchChange}
+                >
                   <option value="">-- เลือกสาขา --</option>
                   {branches.map(branch => (
                     <option key={branch.id} value={branch.id}>{branch.name}</option>

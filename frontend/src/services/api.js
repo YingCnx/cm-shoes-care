@@ -126,6 +126,16 @@ export const createService = (data) => API.post("/services", data);
 export const updateService = (id, data) => API.put(`/services/${id}`, data);
 export const deleteService = (id) => API.delete(`/services/${id}`);
 
+//======================= 🧩 STATUSES =======================//
+export const getAllStatuses = (type = null) => {
+  return API.get("/statuses", { params: type ? { type } : {} });
+};
+export const getStatusById = (id) => API.get(`/statuses/${id}`);
+export const createStatus = (data) => API.post("/statuses", data);
+export const updateStatus = (id, data) => API.put(`/statuses/${id}`, data);
+export const deleteStatus = (id) => API.delete(`/statuses/${id}`);
+
+
 //======================= 💳 EXPENSE =======================//
 export const getAllExpenses = () => API.get("/expenses");
 export const getExpenses = (queue_id) => API.get(`/expenses/${queue_id}`);

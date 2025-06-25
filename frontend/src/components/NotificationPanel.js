@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Bell, Check, X } from 'lucide-react';
 import { getNotifications, markNotificationAsRead } from '../services/api.js';
 import './NotificationPanel.css';
+import socket from '../services/socket.js';
 
 function NotificationPanel() {
   const [notifications, setNotifications] = useState([]);
@@ -48,12 +49,40 @@ function NotificationPanel() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+    useEffect(() => {
+
+      console.log('🧪 เริ่มเชื่อม socket...');
+
+      fetchNotifications();
+
+      const handleNewNotification = (data) => {
+        console.log('📢 แจ้งเตือนใหม่:', data);
+
+           const audio = new Audio('/sounds/notification.mp3');
+            audio.play().catch(err => console.warn('🔇 play error:', err));
+
+        console.log(audio);
+
+        setNotifications((prev) => [
+          {
+            ...data,
+            read: false,
+            created_at: new Date().toISOString(),
+          },
+          ...prev
+        ]);
+      };
+
+      socket.on('new-notification', handleNewNotification);
+
+      return () => {
+        socket.off('new-notification', handleNewNotification);
+      };
+    }, []);
 
   return (
     <div className="notification-container" style={{ position: 'fixed', top: '20px', right: '30px', zIndex: 9999 }}>
+
       <button
         onClick={() => setShowPanel(!showPanel)}
         className="notification-bell"
@@ -113,6 +142,7 @@ function NotificationPanel() {
           </ul>
 
         </div>
+        
       )}
     </div>
   );

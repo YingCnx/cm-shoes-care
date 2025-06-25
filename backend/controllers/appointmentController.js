@@ -30,8 +30,10 @@ export const getAppointments = async (req, res) => {
 export const createAppointment = async (req, res) => {
   try {
     const user = req.user;
-    const { customer_id, customer_name, phone, location, shoe_count, appointment_date, appointment_time } = req.body;
+    const { customer_id, customer_name, phone, location, shoe_count, appointment_date, appointment_time ,appointment_type} = req.body;
 
+    console.log("body", req.body);
+    
     if (!user.isSuperAdmin && !user.branch_id) {
       return res.status(403).json({ message: "Unauthorized access" });
     }
@@ -47,6 +49,7 @@ export const createAppointment = async (req, res) => {
       appointment_date,
       appointment_time,
       branch_id,
+      appointment_type,
     });
 
     res.status(201).json({ message: "Appointment created successfully" });

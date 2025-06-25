@@ -98,6 +98,7 @@ const AppointmentsAdmin = () => {
         appointment_date: newAppointment.appointmentDate,
         appointment_time: newAppointment.appointmentTime.trim(),
         branch_id: isSuperAdmin ? newAppointment.branch_id : user.branch_id,
+        appointment_type: 'pickup',
       };
 
       await createAppointment(formattedAppointment);
@@ -203,6 +204,7 @@ const AppointmentsAdmin = () => {
             <th>จำนวน</th>
             <th>วันที่</th>
             <th>เวลา</th>
+            <th>ประเภท</th>
             <th>สถานะ</th>
             <th>อัปเดต</th>
             <th>ลบ</th>
@@ -218,6 +220,11 @@ const AppointmentsAdmin = () => {
               <td>{appt.shoe_count}</td>
               <td>{formatDate(appt.appointment_date)}</td>
               <td>{appt.appointment_time.slice(0, 5)} น.</td>
+              <td>{
+              appt.appointment_type === 'pickup'
+              ? <span className="badge-status" style={{ backgroundColor: 'rgba(251, 204, 204, 0.63)' }}>นัดส่ง</span>
+              : <span className="badge-status" style={{ backgroundColor: 'rgba(150, 207, 207, 0.52)'  }}>นัดรับ</span>
+              }</td>
               <td>
                 <span className={`badge-status ${appt.status === 'สำเร็จ' ? 'paid' : appt.status === 'ยืนยันแล้ว' ? 'pending' : 'unpaid'}`}>
                   {appt.status}
@@ -239,9 +246,9 @@ const AppointmentsAdmin = () => {
                 {appt.status !== 'สำเร็จ' && (
                   <button
                     className="btn btn-danger btn-sm"
-                    onClick={() => handleDelete(appt.id)}
+                    onClick={() => handleStatusUpdate(appt.id, 'ยกเลิก')}
                   >
-                    ❌ ลบ
+                    ❌ ยกเลิก
                   </button>
                 )}
               </td>

@@ -19,7 +19,6 @@ const AddAppointmentModal = ({ show, onClose, onAddAppointment }) => {
         return tomorrow.toISOString().split('T')[0];
     });
     const [appointmentTime, setAppointmentTime] = useState('10:00');
-
     const [isAdmin, setIsAdmin] = useState(false);
     const [selectedBranch, setSelectedBranch] = useState("");
     const [user, setUser] = useState(null);

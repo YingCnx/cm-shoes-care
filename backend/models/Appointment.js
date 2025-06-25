@@ -17,7 +17,8 @@ static async getAll() {
         a.branch_id, 
         a.queue_id, 
         a.customer_id,
-        c.origin_source AS source
+        c.origin_source AS source,
+        a.appointment_type AS type
       FROM 
         appointments a
       LEFT JOIN 
@@ -50,13 +51,14 @@ static async getByBranch(branch_id) {
         a.branch_id, 
         a.queue_id, 
         a.customer_id,
-        c.origin_source as source
+        c.origin_source as source,
+        a.appointment_type AS type
       FROM 
         appointments a
       LEFT JOIN 
         customers c ON a.customer_id = c.id
       WHERE 
-        a.branch_id = $1
+        a.branch_id = $1 and a.status != 'ยกเลิก'
       ORDER BY 
         a.appointment_date ASC
     `, [branch_id]);
@@ -74,7 +76,7 @@ static async getByBranch(branch_id) {
     return result.rows[0];
   }
 
-  static async create({ customer_id, customer_name, phone, location, shoe_count, appointment_date, appointment_time, branch_id }) {
+  static async create({ customer_id, customer_name, phone, location, shoe_count, appointment_date, appointment_time, branch_id,appointment_type }) {
   try {
     const result = await pool.query(
       `INSERT INTO appointments (
@@ -86,8 +88,9 @@ static async getByBranch(branch_id) {
           appointment_date,
           appointment_time,
           branch_id,
-          status
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          status,
+          appointment_type
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING *`,
       [
         customer_id,
@@ -98,7 +101,8 @@ static async getByBranch(branch_id) {
         appointment_date,
         appointment_time,
         branch_id,
-        'รอดำเนินการ'
+        'รอดำเนินการ',
+        appointment_type
       ]
     );
 

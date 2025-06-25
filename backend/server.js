@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import https from 'https';
 import cookieParser from 'cookie-parser';
+import { Server as SocketIOServer } from 'socket.io';
 
 // ✅ โหลด environment variables
 dotenv.config();
@@ -95,6 +96,7 @@ import backupRoutes from "./routes/backup.js";
 import notificationRoutes from './routes/notificationRoutes.js';
 import adminLockerRoutes  from "./routes/lockerRoutes.js";
 import lockerRoutes from './routes/locker/index.js';
+import statusRoutes from "./routes/statusRoutes.js";
 
 
 // ✅ เชื่อม Route หลัก
@@ -114,7 +116,7 @@ app.use("/api/backup", backupRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use("/api/adminLocker", adminLockerRoutes );
 app.use('/api/locker', lockerRoutes);
-
+app.use("/api/statuses", statusRoutes);
 
 
 
@@ -125,6 +127,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Internal Server Error" });
 });
 
+
+let server;
+
 // ✅ รองรับ HTTPS และ fallback ไป HTTP ถ้า cert ไม่มี
 if (fs.existsSync("./certs/key.pem") && fs.existsSync("./certs/cert.pem")) {
   const httpsOptions = {
@@ -132,11 +137,11 @@ if (fs.existsSync("./certs/key.pem") && fs.existsSync("./certs/cert.pem")) {
     cert: fs.readFileSync("./certs/cert.pem"),
   };
 
-  https.createServer(httpsOptions, app).listen(PORT, () => {
+ server =  https.createServer(httpsOptions, app).listen(PORT, () => {
     console.log(`✅ HTTPS Server running on port ${PORT}`);
   });
 } else {
-  app.listen(PORT, '0.0.0.0', () => {
+ server =  app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ HTTP Server running on port ${PORT}`);
   });
 }
@@ -148,4 +153,49 @@ process.on('uncaughtException', (err) => {
 
 process.on('unhandledRejection', (err) => {
   console.error('🚨 Unhandled Rejection:', err);
+});
+
+//--------------------------------------------
+
+
+// ✅ เชื่อม Socket.IO กับ server
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: allowedOrigins,
+    credentials: true
+  }
+});
+
+// ✅ กำหนด event ที่ต้องการรองรับ
+io.on('connection', (socket) => {
+  console.log('🔌 Client connected:', socket.id);
+
+  socket.on('disconnect', () => {
+    console.log('❌ Client disconnected:', socket.id);
+  });
+
+  // ทดสอบส่ง message
+  socket.on('ping-server', (data) => {
+    console.log('📥 ping-server:', data);
+    socket.emit('pong-client', { message: 'pong from server!' });
+  });
+});
+
+// ✅ ให้ใช้งานได้ใน controller ผ่าน req.app.get('io')
+app.set('io', io);
+
+app.get('/test-io', (req, res) => {
+  const io = app.get('io');
+  if (!io) {
+    return res.status(500).send('Socket.IO ยังไม่ได้ตั้งค่า');
+  }
+
+  const mockData = {
+    id: Date.now(), // สุ่ม id
+    type: 'info',
+    message: 'แจ้งเตือนทดสอบจาก /test-io 🎉'
+  };
+
+  io.emit('new-notification', mockData);
+  res.send('🔔 ส่งแจ้งเตือนทดสอบแล้ว');
 });

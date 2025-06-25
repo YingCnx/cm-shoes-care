@@ -531,6 +531,9 @@ const QueueDetail = () => {
                 <button className="btn btn-success uniform-button" style={buttonStyle} onClick={() =>handleGenerateInvoice(queue_id)}>
                      ใบแจ้งราคา                      
                 </button>
+                <button className="btn btn-primary uniform-button" style={buttonStyle} onClick={() =>handleGenerateInvoice(queue_id)}>
+                     สร้างนัดส่ง                      
+                </button>
                 <button className="btn btn-danger uniform-button" style={buttonStyle} onClick={() => handleDeleteQueue(queue_id)} disabled={isPaid}>
                     ลบคิว
                 </button>
