@@ -33,7 +33,8 @@ export const updateAppointmentStatus = (id, status) => API.put(`/appointments/${
 export const updateAppointmentQueueId  = (id, queue_id) => API.put(`/appointments/${id}/queue-id`, { queue_id });
 export const updateAppointment = (id, data) => API.put(`/appointments/${id}`, data);
 export const deleteAppointment = (id) => API.delete(`/appointments/${id}`);
-
+export const getAppointmentsForQueue = (branch_id = null) =>
+  API.get("/appointments/forqueue", { params: { branch_id } });
 //======================= 🏷️ QUEUE =======================//
 export const createQueue = async (queueData) => {
   try {
@@ -50,7 +51,12 @@ export const getQueue = (branch_id = null) => {
   return API.get("/queue", { params: { branch_id } });
 };
 export const getQueueDetail = (id) => API.get(`/queue/${id}`);
-export const updateQueueStatus = (id, status, total_price) => API.put(`/queue/${id}/status`, { status, total_price });
+export const updateQueueStatus = (id, status, total_price, deliveryMethod = null) =>
+  API.put(`/queue/${id}/status`, {
+    status,
+    total_price,
+    deliveryMethod
+  });
 export const deleteQueue = (id) => API.delete(`/queue/${id}`);
 // ✅ อัปเดตรายละเอียดคิว (เพิ่ม-ลบ บริการ)
 export const updateQueue = async (id, updatedData) => {  

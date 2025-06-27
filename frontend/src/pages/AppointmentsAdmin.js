@@ -68,6 +68,7 @@ const AppointmentsAdmin = () => {
     try {
       const res = await getAppointments(branchId);
       setAppointments(res.data);
+      console.log("📌 Debug: ข้อมูลจาก API", res.data);
     } catch (error) {
       console.error("🔴 Error fetching appointments:", error);
     }
@@ -221,9 +222,9 @@ const AppointmentsAdmin = () => {
               <td>{formatDate(appt.appointment_date)}</td>
               <td>{appt.appointment_time.slice(0, 5)} น.</td>
               <td>{
-              appt.appointment_type === 'pickup'
-              ? <span className="badge-status" style={{ backgroundColor: 'rgba(251, 204, 204, 0.63)' }}>นัดส่ง</span>
-              : <span className="badge-status" style={{ backgroundColor: 'rgba(150, 207, 207, 0.52)'  }}>นัดรับ</span>
+              appt.type === 'pickup'
+              ? <span className="badge-status" style={{ backgroundColor: 'rgba(150, 207, 207, 0.52)'  }}>นัดรับ</span>
+              : <span className="badge-status" style={{ backgroundColor: 'rgba(240, 231, 183, 0.68)' }}>นัดส่ง</span>
               }</td>
               <td>
                 <span className={`badge-status ${appt.status === 'สำเร็จ' ? 'paid' : appt.status === 'ยืนยันแล้ว' ? 'pending' : 'unpaid'}`}>

@@ -5,7 +5,8 @@ import {
   updateAppointmentStatus,
   updateAppointment,
   deleteAppointment,
-  updateAppointmentQueueId
+  updateAppointmentQueueId,
+  getAppointmentsForQueue
 } from "../controllers/appointmentController.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
@@ -13,6 +14,7 @@ import authMiddleware from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 router.get("/", authMiddleware, getAppointments);
+router.get("/forqueue", authMiddleware, getAppointmentsForQueue);
 router.post("/create", authMiddleware, createAppointment);
 router.put("/:id/status", authMiddleware, updateAppointmentStatus);
 router.put("/:id", authMiddleware, updateAppointment);

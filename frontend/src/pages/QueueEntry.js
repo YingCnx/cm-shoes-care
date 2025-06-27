@@ -111,7 +111,9 @@ const QueueEntry = () => {
             const res = await getAppointments();
 
             let filteredAppointments = res.data.filter(appt =>
-                appt.status === 'สำเร็จ' && (!appt.queue_id || appt.queue_id === null)
+              appt.status === 'สำเร็จ' &&
+              (!appt.queue_id || appt.queue_id === null) &&
+              appt.type === 'pickup'
             );
 
             // ✅ กรองตาม branch_id ที่เลือก
@@ -291,26 +293,34 @@ const QueueEntry = () => {
             <th>เลือก</th>
           </tr>
         </thead>
-        <tbody>
-          {appointments.map((appt) => (
-            <tr key={appt.id}>
-              <td>{appt.customer_name}</td>
-              <td>{appt.phone}</td>
-              <td>{appt.shoe_count}</td>
-              <td>
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => handleSelectAppointment(appt)}
-                >
-                  เลือก
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
+          <tbody>
+            {appointments.length === 0 ? (
+              <tr className="table-light">
+                <td colSpan="4" className="text-center text-muted py-3" style={{ cursor: 'default' }}>
+                  ไม่มีนัดหมายสำหรับเพิ่มคิวใหม่
+                </td>
+              </tr>
+            ) : (
+              appointments.map((appt) => (
+                <tr key={appt.id}>
+                  <td>{appt.customer_name}</td>
+                  <td>{appt.phone}</td>
+                  <td>{appt.shoe_count}</td>
+                  <td>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => handleSelectAppointment(appt)}
+                    >
+                      เลือก
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
       </table>
     </div>
-
+   
     {/* ส่วนล่าง: Locker */}
   <div style={{ flex: 1, overflowY: 'auto', borderTop: '2px solid #ddd', marginTop: '1rem', paddingTop: '1rem' }}>
     <h2 className="mb-3">📦 เลือกจาก Locker</h2>
@@ -325,24 +335,32 @@ const QueueEntry = () => {
           <th>เลือก</th>
         </tr>
       </thead>
-      <tbody>
-        {lockerDrops.map(drop => (
-          <tr key={drop.id}>
-            <td>{drop.customer_name || '-'}</td>
-            <td>{drop.phone}</td>
-            <td>Locker {drop.locker_name}</td>
-            <td>{drop.total_pairs}</td>
-            <td>
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() => handleSelectLocker(drop)}
-              >
-                เลือก
-              </button>
+        <tbody>
+          {lockerDrops.length === 0 ? (
+          <tr style={{ cursor: 'default' }} className="table-light">
+            <td colSpan="5" className="text-center text-muted py-3">
+              ไม่มีรองเท้าที่รอรับจากตู้
             </td>
           </tr>
-        ))}
-      </tbody>
+          ) : (
+            lockerDrops.map(drop => (
+              <tr key={drop.id}>
+                <td>{drop.customer_name || '-'}</td>
+                <td>{drop.phone}</td>
+                <td>Locker {drop.locker_name}</td>
+                <td>{drop.total_pairs}</td>
+                <td>
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => handleSelectLocker(drop)}
+                  >
+                    เลือก
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
+    </tbody>
     </table>
   </div>
   </div>

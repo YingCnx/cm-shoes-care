@@ -1,4 +1,6 @@
 import Appointment from "../models/Appointment.js";
+import Queue from "../models/Queue.js";
+
 
 // 📌 1️⃣ ดึงรายการนัดหมาย (Admin เห็นทุกสาขา / Employee เห็นเฉพาะของตัวเอง)
 export const getAppointments = async (req, res) => {
@@ -16,9 +18,6 @@ export const getAppointments = async (req, res) => {
       appointments = await Appointment.getByBranch(user.branch_id);
     }
 
-     // ✅ กรองเฉพาะรายการที่ `queue_id = NULL`
-     appointments = appointments.filter(appt => appt.queue_id === null);
-
     res.json(appointments);
   } catch (error) {
     console.error("🔴 Error fetching appointments:", error);
@@ -26,20 +25,48 @@ export const getAppointments = async (req, res) => {
   }
 };
 
+
+export const getAppointmentsForQueue = async (req, res) => {
+  try {
+    const { branch_id } = req.query;
+    const user = req.user;
+    let appointments = user.isSuperAdmin
+      ? (branch_id ? await Appointment.getAppointmentsForQueue(branch_id) : await Appointment.getAppointmentsForQueueAll())
+      : await Appointment.getAppointmentsForQueue(user.branch_id);
+
+    res.json(appointments);
+  } catch (error) {
+    console.error("🔴 Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
 // 📌 2️⃣ สร้างนัดหมายใหม่ (เฉพาะพนักงานสาขานั้น ๆ)
 export const createAppointment = async (req, res) => {
   try {
     const user = req.user;
-    const { customer_id, customer_name, phone, location, shoe_count, appointment_date, appointment_time ,appointment_type} = req.body;
+    const {
+      customer_id,
+      customer_name,
+      phone,
+      location,
+      shoe_count,
+      appointment_date,
+      appointment_time,
+      appointment_type,
+      queue_id // ✅ เพิ่มมารับค่าจาก frontend
+    } = req.body;
 
-    console.log("body", req.body);
-    
+    console.log("📥 body:", req.body);
+
     if (!user.isSuperAdmin && !user.branch_id) {
       return res.status(403).json({ message: "Unauthorized access" });
     }
 
     const branch_id = user.isSuperAdmin ? req.body.branch_id : user.branch_id;
 
+    // ✅ ส่ง queue_id (null ได้) ไปด้วย
     await Appointment.create({
       customer_id,
       customer_name,
@@ -50,14 +77,16 @@ export const createAppointment = async (req, res) => {
       appointment_time,
       branch_id,
       appointment_type,
+      queue_id // ✅ ส่งให้ model
     });
 
-    res.status(201).json({ message: "Appointment created successfully" });
+    res.status(201).json({ message: "✅ Appointment created successfully" });
   } catch (error) {
     console.error("🔴 Error creating appointment:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // 📌 3️⃣ อัปเดตสถานะนัดหมาย (ต้องอยู่ในสาขาตัวเอง หรือเป็น Admin)
 export const updateAppointmentStatus = async (req, res) => {
@@ -73,13 +102,33 @@ export const updateAppointmentStatus = async (req, res) => {
       return res.status(403).json({ message: "Unauthorized access" });
     }
 
-    await Appointment.updateStatus(req.params.id, req.body.status);
+    const newStatus = req.body.status;
+
+    // ✅ อัปเดตสถานะ appointment
+    await Appointment.updateStatus(req.params.id, newStatus);
+
+    // ✅ ถ้าเป็นนัดส่งและมี queue_id → อัปเดตสถานะ queue ด้วย
+    if (appointment.appointment_type === "delivery" && appointment.queue_id) {
+      let queueStatus = null;
+
+      if (newStatus === "ยืนยันแล้ว") {
+        queueStatus = "กำลังจัดส่ง";
+      } else if (newStatus === "สำเร็จ") {
+        queueStatus = "จัดส่งสำเร็จ";
+      }
+
+      if (queueStatus) {
+        await Queue.updateStatusbyAppointment(appointment.queue_id, queueStatus);
+      }
+    }
+
     res.json({ message: "Status updated successfully" });
   } catch (error) {
     console.error("🔴 Error updating status:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // ✅ อัปเดต queue_id ของนัดหมาย
 export const updateAppointmentQueueId = async (req, res) => {
@@ -149,5 +198,3 @@ export const deleteAppointment = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-

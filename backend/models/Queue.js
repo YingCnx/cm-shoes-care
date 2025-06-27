@@ -84,7 +84,7 @@ import pool from "../config/database.js";
       LEFT JOIN customers c ON q.customer_id = c.id
       LEFT JOIN queue_items qi ON q.id = qi.queue_id
       LEFT JOIN services s ON qi.service_id = s.id
-      WHERE q.branch_id = $1  -- ✅ กรองตามสาขาผู้ใช้
+      WHERE q.branch_id = $1  AND q.status != 'ยกเลิก'
       GROUP BY 
           q.id, 
           c.name, 
@@ -112,39 +112,41 @@ import pool from "../config/database.js";
 
       const queueResult = await pool.query(
         `
-            SELECT 
-                q.id AS queue_id, 
-                c.name AS customer_name,       -- ✅ ดึงชื่อจาก customers
-                c.phone,                       -- ✅ ดึงเบอร์จาก customers
-                q.location, 
-                q.total_pairs, 
-                q.total_price, 
-                q.delivery_date, 
-                q.status, 
-                q.received_date,
-                q.payment_status,
-                q.source,                                     -- ✅ ช่องทาง
-                l.code AS locker_code,                        -- ✅ รหัสตู้
-                l.name AS locker_name,                        -- ✅ ชื่อตู้
-                q.slot_id,         
-                b.name AS branch_name,         -- ✅ ดึงชื่อสาขา
-                json_agg(
-                    json_build_object(
-                        'service_id', qi.service_id,
-                        'service_name', s.service_name,
-                        'price_per_pair', qi.price_per_pair
-                    )
-                ) FILTER (WHERE qi.service_id IS NOT NULL) AS services
-            FROM queue q
-            LEFT JOIN customers c ON q.customer_id = c.id            -- ✅ JOIN กับ customers
-            LEFT JOIN queue_items qi ON q.id = qi.queue_id
-            LEFT JOIN services s ON qi.service_id = s.id
-            LEFT JOIN branches b ON q.branch_id = b.id               -- ✅ JOIN กับ branches
-            LEFT JOIN lockers l ON q.locker_id = l.id  
-            WHERE q.id = $1                                          -- ✅ ดึงเฉพาะ queue ที่ต้องการ
-            GROUP BY q.id, c.name, c.phone, b.name, q.source, l.code, l.name, q.slot_id
-            ORDER BY q.delivery_date ASC NULLS LAST;
-
+           SELECT 
+              q.id AS queue_id, 
+              q.id AS id,                          -- ✅ เพิ่ม id เฉย ๆ ด้วย เพื่อให้ frontend ใช้ queue.id ได้เลย
+              q.customer_id,                       -- ✅ ต้องใช้สำหรับ appointment
+              q.branch_id,                         -- ✅ ต้องใช้สำหรับ appointment
+              c.name AS customer_name,            -- ✅ แสดงชื่อ
+              c.phone,                            -- ✅ แสดงเบอร์
+              q.location, 
+              q.total_pairs, 
+              q.total_price, 
+              q.delivery_date, 
+              q.status, 
+              q.received_date,
+              q.payment_status,
+              q.source,                            -- ✅ ช่องทาง
+              l.code AS locker_code,              -- ✅ รหัสตู้
+              l.name AS locker_name,              -- ✅ ชื่อตู้
+              q.slot_id,         
+              b.name AS branch_name,              -- ✅ ชื่อสาขา
+              json_agg(
+                  json_build_object(
+                      'service_id', qi.service_id,
+                      'service_name', s.service_name,
+                      'price_per_pair', qi.price_per_pair
+                  )
+              ) FILTER (WHERE qi.service_id IS NOT NULL) AS services
+          FROM queue q
+          LEFT JOIN customers c ON q.customer_id = c.id
+          LEFT JOIN queue_items qi ON q.id = qi.queue_id
+          LEFT JOIN services s ON qi.service_id = s.id
+          LEFT JOIN branches b ON q.branch_id = b.id
+          LEFT JOIN lockers l ON q.locker_id = l.id  
+          WHERE q.id = $1
+          GROUP BY q.id, q.customer_id, q.branch_id, c.name, c.phone, b.name, q.source, l.code, l.name, q.slot_id
+          ORDER BY q.delivery_date ASC NULLS LAST;
         `, [id]);  
 
       if (queueResult.rows.length === 0) {
@@ -188,27 +190,52 @@ import pool from "../config/database.js";
     }
   }
 
-
-  // ✅ อัปเดตสถานะคิว
-  static async updateStatus(id, status, total_price = null) {
-    try {
-        if (status === "เตรียมส่ง" && (!total_price || isNaN(total_price))) {
-            throw new Error("กรุณากรอกจำนวนเงินก่อนเปลี่ยนสถานะเป็น 'เตรียมส่ง'");
-        }
-
-        // ✅ ตรวจสอบค่า total_price ถ้าเป็น null ให้กำหนดเป็น 0
-        const finalPrice = total_price !== null && !isNaN(total_price) ? total_price : 0;
-
-        await pool.query(
-            `UPDATE queue SET status = $1, total_price = COALESCE($2, total_price) WHERE id = $3`,
-            [status, finalPrice, id]
-        );
-
-        return { message: "Queue status updated successfully!" };
-    } catch (error) {
-        throw new Error(`🔴 Error updating queue status: ${error.message}`);
+// ✅ อัปเดตสถานะคิว พร้อม delivery_method
+static async updateStatus(id, status, total_price = null, delivery_method = null) {
+  try {
+    if (status === "เตรียมส่ง" && (!total_price || isNaN(total_price))) {
+      throw new Error("กรุณากรอกจำนวนเงินก่อนเปลี่ยนสถานะเป็น 'เตรียมส่ง'");
     }
+
+    const finalPrice = total_price !== null && !isNaN(total_price) ? total_price : 0;
+
+    // ✅ เตรียม SQL และ parameters
+    const updateFields = ['status = $1', 'total_price = $2'];
+    const values = [status, finalPrice];
+
+    // ✅ ถ้ามี delivery_method ให้เพิ่มเข้า SQL
+    if (delivery_method && typeof delivery_method === 'string') {
+      updateFields.push('delivery_method = $3');
+      values.push(delivery_method.toLowerCase());
+    }
+    
+    const sql = `UPDATE queue SET ${updateFields.join(', ')} WHERE id = $${values.length + 1}`;
+    values.push(id);
+
+    await pool.query(sql, values);
+
+    return { message: "✅ อัปเดตสถานะคิวสำเร็จ!" };
+  } catch (error) {
+    throw new Error(`🔴 Error updating queue status: ${error.message}`);
   }
+}
+
+
+static async updateStatusbyAppointment(id, status) {
+  try {
+    const result = await pool.query(
+      "UPDATE queue SET status = $1 WHERE id = $2 RETURNING *",
+      [status, id] 
+    );
+
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error("🔴 Error updating queue status:", error);
+    throw error;
+  }
+}
+
+
 
 
   // ✅ ลบคิว (เฉพาะที่ยังไม่ส่งสำเร็จ)
@@ -230,6 +257,21 @@ static async delete(id) {
     throw new Error(`🔴 Error deleting queue: ${error.message}`);
   } finally {
     client.release();
+  }
+}
+
+// เปลี่ยนสถานะ queue เป็น "ยกเลิก" แทนการลบ
+static async cancel(id) {
+  try {
+    const result = await pool.query(
+      "UPDATE queue SET status = 'ยกเลิก' WHERE id = $1 RETURNING *",
+      [id]
+    );
+
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error("🔴 Error cancelling queue:", error);
+    throw error;
   }
 }
 

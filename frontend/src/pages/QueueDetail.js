@@ -367,11 +367,13 @@ const QueueDetail = () => {
 };
 
     
-
-    const handleUpdateQueueStatus = async (queueId, newStatus,totalPrice) => {
+    const handleUpdateQueueStatus = async (queueId, newStatus, totalPrice, deliveryData = {}) => {
         try {
-            // เรียก API เพื่ออัปเดตสถานะ
-            await updateQueueStatus(queueId, newStatus,totalPrice);
+            const deliveryMethod = deliveryData.deliveryMethod || null;
+
+            // ✅ ส่ง deliveryMethod เข้าไปในการอัปเดต
+            await updateQueueStatus(queueId, newStatus, totalPrice, deliveryMethod);
+
             alert("✅ อัปเดตสถานะคิวเรียบร้อย!");
             fetchQueueDetail(); // โหลดข้อมูลใหม่
         } catch (error) {
@@ -530,9 +532,6 @@ const QueueDetail = () => {
                 </button>
                 <button className="btn btn-success uniform-button" style={buttonStyle} onClick={() =>handleGenerateInvoice(queue_id)}>
                      ใบแจ้งราคา                      
-                </button>
-                <button className="btn btn-primary uniform-button" style={buttonStyle} onClick={() =>handleGenerateInvoice(queue_id)}>
-                     สร้างนัดส่ง                      
                 </button>
                 <button className="btn btn-danger uniform-button" style={buttonStyle} onClick={() => handleDeleteQueue(queue_id)} disabled={isPaid}>
                     ลบคิว
@@ -872,6 +871,7 @@ const QueueDetail = () => {
                 queueId={queue_id}
                 currentStatus={queue?.status}
                 totalPrice={totalQueuePrice}
+                queue={queue}
             />
 
             {showAddShoeModal && (

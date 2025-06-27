@@ -96,15 +96,17 @@ export const updateQueue = async (req, res) => {
   } 
 };
 
-// ✅ 4️⃣ อัปเดตสถานะคิว
+// ✅ 4️⃣ อัปเดตสถานะคิว พร้อมช่องทางจัดส่ง
 export const updateQueueStatus = async (req, res) => {
-  const { status, total_price } = req.body;
+  const { status, total_price, deliveryMethod } = req.body; // ✅ รับเพิ่ม deliveryMethod
   const queueId = parseInt(req.params.id, 10);
+
   if (isNaN(queueId)) {
     return res.status(400).json({ message: "Invalid queue ID" });
   }
+
   try {
-    const result = await Queue.updateStatus(queueId, status, total_price);
+    const result = await Queue.updateStatus(queueId, status, total_price, deliveryMethod); // ✅ ส่งต่อ
     res.json(result);
   } catch (error) {
     console.error("🔴 Error updating queue status:", error.message);
@@ -113,10 +115,13 @@ export const updateQueueStatus = async (req, res) => {
 };
 
 
+
 // ✅ 5️⃣ ลบคิว
 export const deleteQueue = async (req, res) => {
   try {
-    const result = await Queue.delete(req.params.id);
+    //เปลี่ยนจากลบข้อมูลเป็นอัพเดทสถานะเป็น ยกเลิก
+    //const result = await Queue.delete(req.params.id);
+    const result = await Queue.cancel(req.params.id);
     res.json(result);
   } catch (error) {
     console.error("🔴 Error deleting queue:", error.message);

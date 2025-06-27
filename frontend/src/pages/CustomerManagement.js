@@ -177,6 +177,7 @@ const CustomerManagement = () => {
             <thead>
               <tr>
                 <th>รหัสลูกค้า</th>
+                <th>ช่องทาง</th>
                 <th>ชื่อ</th>
                 <th>เบอร์โทร</th>
                 <th>ที่อยู่</th>
@@ -190,6 +191,7 @@ const CustomerManagement = () => {
               {filteredCustomers.map((customer) => (
                 <tr key={customer.id}>
                   <td>{customer.customer_code}</td>
+                  <td>{customer.origin_source}</td>
                   <td>{customer.name}</td>
                   <td>{customer.phone}</td>
                   <td  className="td-addr">{customer.address}</td>

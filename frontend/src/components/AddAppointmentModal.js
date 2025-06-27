@@ -22,6 +22,7 @@ const AddAppointmentModal = ({ show, onClose, onAddAppointment }) => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [selectedBranch, setSelectedBranch] = useState("");
     const [user, setUser] = useState(null);
+    const [originSource, setoriginSource] = useState('');
 
 
     const [branches, setBranches] = useState([]);
@@ -85,6 +86,7 @@ useEffect(() => {
                 setPhone(res.data.phone);
                 setLocation(res.data.address || "Walk-in");
                 setCustomerId(res.data.id);
+                setoriginSource(res.data.origin_source);
             } else {
                 alert("❌ ไม่สามารถบันทึกข้อมูลลูกค้าได้");
             }
@@ -100,10 +102,15 @@ useEffect(() => {
             return;
         }
 
-        if (!window.confirm("คุณต้องการเพิ่มนัดหมายนี้หรือไม่?")) {
+        if(originSource === 'locker'){
+            alert("❌ คุณต้องเปลี่ยนช่องทางการติดต่อลูกค้าให้ถูกต้องก่อนเพิ่มนัดหมาย");
             return;
         }
 
+        if (!window.confirm("คุณต้องการเพิ่มนัดหมายนี้หรือไม่?")) {
+            return;
+        }
+    
         const newAppointment = {
             customerId,
             customerName,
@@ -154,6 +161,7 @@ useEffect(() => {
                                     if (selected?.data) {
                                         const customer = selected.data;
                                         setCustomerId(customer.id);
+                                        setoriginSource(customer.origin_source);
                                         setCustomerName(customer.name);
                                         setPhone(customer.phone);
                                         setLocation(customer.address || "Walk-in");
@@ -178,6 +186,10 @@ useEffect(() => {
                             }}>เพิ่มลูกค้า</button>
                         </div>
                     </div>
+                </div>
+                 <div className="mb-3">
+                    <label className="form-label fw-bold">ช่องทาง</label>
+                    <input type="text" className="form-control" placeholder="ช่องทาง" value={originSource} readOnly />
                 </div>
 
                 <div className="mb-3">
