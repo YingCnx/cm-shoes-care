@@ -9,21 +9,24 @@ import authEmployeeRoutes from "./authEmployee.js";
 
 router.use("/admin", authAdminRoutes);
 router.use("/", authEmployeeRoutes);
-// ✅ ตรวจสอบ session จาก JWT ใน cookie
+
+// ✅ ตรวจสอบ session จาก session-based login
 router.get("/check", authMiddleware, (req, res) => {
-  const { id, email, role, branch_id } = req.user;
+  const { id, email, role, branch_id } = req.session.user;
   res.json({ id, email, role, branch_id });
 });
 
-
-// ✅ Logout Route
+// ✅ Logout route: ล้าง session แทน cookie token
 router.post("/logout", (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("❌ Logout failed:", err);
+      return res.status(500).json({ message: "Logout failed" });
+    }
+
+    res.clearCookie("connect.sid"); // ล้าง session cookie
+    res.json({ message: "✅ Logout success" });
   });
-  res.json({ message: "✅ Logout success" });
 });
 
 export default router;

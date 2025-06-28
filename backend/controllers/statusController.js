@@ -4,7 +4,7 @@ import Statuses from "../models/statuses.js";
 export const getAllStatuses = async (req, res) => {
   try {
     const { type } = req.query;
-    const user = req.user;
+    const user = req.session.user;
 
     // SuperAdmin เห็นทุกประเภท / พนักงานอาจใช้แค่บางประเภท (ตาม logic ที่กำหนด)
     const statuses = await Statuses.getAll(type);

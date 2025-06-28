@@ -21,7 +21,7 @@ export const getPayouts = async (req, res) => {
 export const createPayout = async (req, res) => {
     try {
         const { payout_type, description, amount, notes, payout_date } = req.body;
-        const { isSuperAdmin, branch_id, id: employee_id } = req.user; // ✅ ดึงค่าจาก Token
+        const { isSuperAdmin, branch_id, id: employee_id } = req.session.user; 
 
         if (!payout_type || !description || !amount || !payout_date) {
             return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });

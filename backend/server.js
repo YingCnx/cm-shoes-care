@@ -6,6 +6,7 @@ import fs from 'fs';
 import https from 'https';
 import cookieParser from 'cookie-parser';
 import { Server as SocketIOServer } from 'socket.io';
+import session from 'express-session';
 
 // ✅ โหลด environment variables
 dotenv.config();
@@ -78,6 +79,18 @@ const setCORSHeaders = (res, path) => {
 
 app.use("/uploads", express.static("uploads", { setHeaders: setCORSHeaders }));
 app.use("/public", express.static("public", { setHeaders: setCORSHeaders }));
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'keyboard cat',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: false, // ✅ ตั้งเป็น true เมื่อใช้ https
+    sameSite: 'Lax',
+    maxAge: 1000 * 60 * 60 * 8 // 8 ชั่วโมง
+  }
+}));
 
 // ✅ นำเข้า Routes
 import authRoutes from './routes/auth.js';

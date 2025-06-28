@@ -45,6 +45,7 @@ const Dashboard = () => {
 useEffect(() => {
   const init = async () => {
     const user = await checkSession();
+    //console.log("user",user);
     if (!user) {
       setTimeout(() => navigate('/login'), 0);
       return;
@@ -282,6 +283,7 @@ const getPayoutsMonthly = async (branchId) => {
 };
 
 const handleBranchChange = (e) => {
+
   const branchId = e.target.value;
   if (branchId === selectedBranch) return; // ✅ ป้องกันเรียกซ้ำ
   setSelectedBranch(branchId);

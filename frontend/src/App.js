@@ -42,13 +42,14 @@ function App() {
 function MainLayout() {
   const location = useLocation();
   const hideSidebar = location.pathname === "/login" || location.pathname === "/admin/login";
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-   useEffect(() => {
+  useEffect(() => {
     if (hideSidebar) {
-      document.body.classList.add('no-sidebar');
+      document.body.classList.add("no-sidebar");
     } else {
-      document.body.classList.remove('no-sidebar');
+      document.body.classList.remove("no-sidebar");
     }
   }, [location.pathname]);
 
@@ -61,23 +62,25 @@ function MainLayout() {
 
   return (
     <>
-      {!hideSidebar && <Sidebar />}
-      <div className={`main-content ${hideSidebar ? "no-sidebar" : ""}`}>
-         {/* ✅ เพิ่ม Topbar เฉพาะหน้าที่ไม่ใช่ login */}
+      {!hideSidebar && (
+        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      )}
+      <div className={`main-content ${hideSidebar ? "no-sidebar" : isSidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
         {!hideSidebar && (
           <div className="topbar">
             <div className="fw-bold">CM SHOES CARE ระบบจัดการร้านซักเกิบแอนด์สปา</div>
-            <div style={{ transform: 'translateX(-40px)' }}>
+            <div style={{ transform: "translateX(-40px)" }}>
               <p className="text-gray-600 text-sm mt-1">
-                {currentTime.toLocaleDateString('th-TH', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })} - {currentTime.toLocaleTimeString('th-TH')}
+                {currentTime.toLocaleDateString("th-TH", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}{" "}
+                - {currentTime.toLocaleTimeString("th-TH")}
               </p>
             </div>
-              <NotificationPanel />
+            <NotificationPanel />
           </div>
         )}
 

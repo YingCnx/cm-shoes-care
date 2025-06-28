@@ -1,10 +1,11 @@
 import Employee from "../models/Employee.js";
+import bcrypt from "bcryptjs";
 
 // 📌 ดึงรายชื่อพนักงานทั้งหมด
 export const getAllEmployees = async (req, res) => {
     try {
         const { branch_id } = req.query; 
-        const user = req.user; // ได้จาก Middleware
+        const user = req.session.user;
         let employees;
 
         if (user.isSuperAdmin) {
@@ -75,3 +76,21 @@ export const deleteEmployee = async (req, res) => {
     }
 };
 
+// ✅ เปลี่ยนรหัสผ่านพนักงาน
+export const updateEmployeePassword = async (req, res) => {
+  const { id } = req.params;
+  const { password } = req.body;
+
+  if (!password) {
+    return res.status(400).json({ message: "❌ กรุณาระบุรหัสผ่านใหม่" });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10); // 🔒 เข้ารหัส
+    await Employee.updatePassword(id, hashedPassword);
+    res.json({ message: "✅ เปลี่ยนรหัสผ่านเรียบร้อยแล้ว" });
+  } catch (error) {
+    console.error("🔴 Error updating employee password:", error);
+    res.status(500).json({ message: "❌ ไม่สามารถเปลี่ยนรหัสผ่านได้" });
+  }
+};

@@ -21,6 +21,7 @@ const AppointmentsAdmin = () => {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState(['รอดำเนินการ', 'ยืนยันแล้ว']);
+  const [editAppointment, setEditAppointment] = useState(null);
   const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [sessionUser, setSessionUser] = useState(null);
 
@@ -68,7 +69,7 @@ const AppointmentsAdmin = () => {
     try {
       const res = await getAppointments(branchId);
       setAppointments(res.data);
-      console.log("📌 Debug: ข้อมูลจาก API", res.data);
+     // console.log("📌 Debug: ข้อมูลจาก API", res.data);
     } catch (error) {
       console.error("🔴 Error fetching appointments:", error);
     }
@@ -207,8 +208,7 @@ const AppointmentsAdmin = () => {
             <th>เวลา</th>
             <th>ประเภท</th>
             <th>สถานะ</th>
-            <th>อัปเดต</th>
-            <th>ลบ</th>
+            <th colSpan={3} className="text-center">จัดการนัดหมาย</th>
           </tr>
         </thead>
         <tbody>
@@ -239,7 +239,20 @@ const AppointmentsAdmin = () => {
                       handleStatusUpdate(appt.id, appt.status === 'รอดำเนินการ' ? 'ยืนยันแล้ว' : 'สำเร็จ')
                     }
                   >
-                    อัปเดต
+                   ✔️ อัปเดต
+                  </button>
+                )}
+              </td>
+              <td>
+                {appt.status !== 'สำเร็จ' && (
+                  <button
+                    className="btn btn-info btn-sm"
+                    onClick={() => {
+                      setEditAppointment(appt);
+                      setShowAddModal(true);
+                    }}
+                  >
+                    ✏️ เลื่อน
                   </button>
                 )}
               </td>

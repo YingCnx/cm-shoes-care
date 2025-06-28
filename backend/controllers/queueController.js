@@ -38,9 +38,10 @@ export const createQueue = async (req, res) => {
 
 // ✅ 2️⃣ ดึงคิวทั้งหมด
 export const getAllQueues = async (req, res) => {
+   console.log("✅ Session:", req.session); // 👈 สำคัญมาก
   try {
     const { branch_id } = req.query; // ✅ รับค่า branch_id จาก Query Params
-    const user = req.user; // ✅ ดึงข้อมูล User จาก Middleware
+    const user = req.session.user;
 
     //console.log("📌 Debug: User Data:", user);
     //console.log("📌 Debug: branch_id =", branch_id);

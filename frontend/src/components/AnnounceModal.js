@@ -15,9 +15,11 @@ const AnnounceModal = ({ show, onClose, title, appointments }) => {
           {appointments?.length > 0 ? (
             <ul style={{ textAlign: 'left' }}>
               {appointments.map((appt, idx) => (
-                <li key={idx}>
-                  <strong>{appt.customer_name}</strong> เวลา {appt.appointment_time?.slice(0,5)} น. ที่ {appt.location}
-                </li>
+              <li key={idx}>
+              <span className="text-danger"><strong>{appt.type === 'pickup' ? 'นัดรับ' : 'นัดส่ง'}</strong></span>
+              <strong> {appt.customer_name}</strong> เวลา {appt.appointment_time?.slice(0,5)} น. ที่ {appt.location}
+            </li>
+
               ))}
             </ul>
           ) : (

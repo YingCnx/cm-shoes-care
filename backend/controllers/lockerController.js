@@ -16,7 +16,7 @@ import Customer from "../models/Customer.js";
 export const getAllLockers = async (req, res) => {
   try {
     const { branch_id } = req.query;
-    const user = req.user;
+    const user = req.session.user;
     let lockers;
 
     if (user.isSuperAdmin) {

@@ -4,17 +4,18 @@ import pool from "../config/database.js";
 // 📌 1️⃣ ดึงรายชื่อสาขาทั้งหมด (เฉพาะ Admin)
 export const getBranches = async (req, res) => {
   try {
-    console.log("📌 Debug: User Requesting Branches", req.user);
+    const user = req.session.user;
+    console.log("📌 Debug: User Requesting Branches", user);
 
-    if (!req.user.isSuperAdmin && !req.user.branch_id) {
+    if (!user?.role || (user.role !== "superadmin" && !user.branch_id)) {
       return res.status(403).json({ message: "Unauthorized access" });
     }
 
     let branches;
-    if (req.user.isSuperAdmin) {
+    if (user.role === "superadmin") {
       branches = await Branch.getAll();
     } else {
-      const branch = await Branch.getById(req.user.branch_id);
+      const branch = await Branch.getById(user.branch_id);
       if (!branch) {
         return res.status(404).json({ message: "No branch found" });
       }
@@ -28,13 +29,21 @@ export const getBranches = async (req, res) => {
   }
 };
 
-
+export const getAllBranchesPublic = async (req, res) => {
+  try {
+    const branches = await Branch.getAll();
+    res.json(branches);
+  } catch (error) {
+    console.error("🔴 Error fetching public branches:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 // 📌 2️⃣ ดึงข้อมูลสาขาเดี่ยว
 export const getBranchById = async (req, res) => {
   try {
     const branch = await Branch.getById(req.params.id);
-    
+
     if (!branch) {
       return res.status(404).json({ message: "Branch not found" });
     }
@@ -49,7 +58,8 @@ export const getBranchById = async (req, res) => {
 // 📌 3️⃣ สร้างสาขาใหม่ (เฉพาะ Admin)
 export const createBranch = async (req, res) => {
   try {
-    if (!req.user.isSuperAdmin) {
+    const user = req.session.user;
+    if (!user?.role || user.role !== "superadmin") {
       return res.status(403).json({ message: "Unauthorized access" });
     }
 
@@ -69,7 +79,8 @@ export const createBranch = async (req, res) => {
 // 📌 4️⃣ อัปเดตข้อมูลสาขา (เฉพาะ Admin)
 export const updateBranch = async (req, res) => {
   try {
-    if (!req.user.isSuperAdmin) {
+    const user = req.session.user;
+    if (!user?.role || user.role !== "superadmin") {
       return res.status(403).json({ message: "Unauthorized access" });
     }
 
@@ -91,28 +102,23 @@ export const deleteBranch = async (req, res) => {
   const branchId = req.params.id;
 
   try {
-      ///console.log(`📌 Debug: Checking references for branch ${branchId}`);
+    const user = req.session.user;
+    if (!user?.role || user.role !== "superadmin") {
+      return res.status(403).json({ message: "Unauthorized access" });
+    }
 
-      // ✅ ตรวจสอบว่ามีการอ้างอิงใน appointments หรือ employees
-      const checkAppointments = await pool.query("SELECT COUNT(*) FROM appointments WHERE branch_id = $1", [branchId]);
-      const checkEmployees = await pool.query("SELECT COUNT(*) FROM employees WHERE branch_id = $1", [branchId]);
+    const checkAppointments = await pool.query("SELECT COUNT(*) FROM appointments WHERE branch_id = $1", [branchId]);
+    const checkEmployees = await pool.query("SELECT COUNT(*) FROM employees WHERE branch_id = $1", [branchId]);
 
-      //console.log(`📌 Debug: Appointments Count: ${checkAppointments.rows[0].count}`);
-      //console.log(`📌 Debug: Employees Count: ${checkEmployees.rows[0].count}`);
+    if (checkAppointments.rows[0].count > 0 || checkEmployees.rows[0].count > 0) {
+      return res.status(400).json({ message: "❌ ไม่สามารถลบสาขานี้ได้ เนื่องจากมีข้อมูลอ้างอิงอยู่" });
+    }
 
-      if (checkAppointments.rows[0].count > 0 || checkEmployees.rows[0].count > 0) {
-          console.error("🔴 Cannot delete branch: It has related records.");
-          return res.status(400).json({ message: "❌ ไม่สามารถลบสาขานี้ได้ เนื่องจากมีข้อมูลอ้างอิงอยู่" });
-      }
-
-      // ✅ ลบสาขา
-      console.log(`📌 Debug: Deleting branch ${branchId}`);
-      await Branch.delete(branchId);
-      
-      res.json({ message: "✅ Branch deleted successfully" });
+    await Branch.delete(branchId);
+    res.json({ message: "✅ Branch deleted successfully" });
 
   } catch (error) {
-      console.error("🔴 Error deleting branch:", error);
-      res.status(500).json({ message: `❌ Server error: ${error.message}` });
+    console.error("🔴 Error deleting branch:", error);
+    res.status(500).json({ message: `❌ Server error: ${error.message}` });
   }
 };

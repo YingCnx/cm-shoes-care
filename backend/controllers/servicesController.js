@@ -4,7 +4,7 @@ import Service from "../models/Services.js";
 export const getAllServices = async (req, res) => {
     try {
       const { branch_id } = req.query; // รับค่า branch_id จาก query params
-      const user = req.user; // ข้อมูล User จาก Middleware
+      const user = req.session.user;
   
       //console.log("📌 Debug: User Data:", user);
       //console.log("📌 Debug: branch_id =", branch_id);
@@ -43,7 +43,7 @@ export const getServiceById = async (req, res) => {
 export const createService = async (req, res) => {
     try {
       const { service_name, base_price, description, branch_id } = req.body;
-      const user = req.user;
+      const user = req.session.user;
   
       // Employee ต้องใช้ branch_id ของตัวเองเท่านั้น
       const assignedBranch = user.isSuperAdmin ? branch_id : user.branch_id;
@@ -67,7 +67,7 @@ export const updateService = async (req, res) => {
     try {
       const { id } = req.params;
       const { service_name, base_price, description, branch_id } = req.body;
-      const user = req.user;
+      const user = req.session.user;
   
       // Employee ไม่สามารถเปลี่ยน branch_id ได้
       const assignedBranch = user.isSuperAdmin ? branch_id : user.branch_id;

@@ -6,7 +6,7 @@ import Queue from "../models/Queue.js";
 export const getAppointments = async (req, res) => {
   try {
     const { branch_id } = req.query; 
-    const user = req.user; // ได้จาก Middleware
+    const user = req.session.user;
     let appointments;
 
 

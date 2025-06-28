@@ -1,25 +1,14 @@
-import jwt from "jsonwebtoken";
-
-// ✅ ตรวจแค่ Token ว่า login แล้ว
+// ✅ ตรวจว่า login แล้วหรือยัง (ทั้ง employee และ superadmin)
 const authMiddleware = (req, res, next) => {
-  const token = req.cookies?.token;
-
-  if (!token) {
-    return res.status(401).json({ message: "Access Denied" });
+  if (!req.session?.user) {
+    return res.status(401).json({ message: "Unauthorized: กรุณาเข้าสู่ระบบ" });
   }
-
-  try {
-    const verified = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = verified;
-    next();
-  } catch (err) {
-    res.status(401).json({ message: "Invalid Token" });
-  }
+  next();
 };
 
-// ✅ ตรวจสิทธิ์เฉพาะ SuperAdmin
+// ✅ ตรวจสิทธิ์เฉพาะ SuperAdmin เท่านั้น
 export const verifySuperAdmin = (req, res, next) => {
-  if (!req.user?.role || req.user.role !== "superadmin") {
+  if (!req.session.user || req.session.user.role !== "superadmin") {
     return res.status(403).json({ message: "ต้องเป็น SuperAdmin เท่านั้น" });
   }
   next();

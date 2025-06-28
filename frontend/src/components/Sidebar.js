@@ -15,24 +15,36 @@ import {
   FaUserTie,
   FaCreditCard,
   FaBars,
-  FaTimes
+  FaTimes,
+  FaChevronDown,
+  FaChevronRight,
 } from "react-icons/fa";
 import "./Sidebar.css";
 
-const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(true);
+const Sidebar = ({ isOpen, setIsOpen }) => {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [userName, setUserName] = useState("");
   const [role, setRole] = useState("");
   const [branchId, setBranchId] = useState(null);
   const [branchName, setBranchName] = useState("");
+
+  // 🧩 toggle section states
+  const [showMainMenu, setShowMainMenu] = useState(true); // เปิดไว้
+  const [showSecondary, setShowSecondary] = useState(false);
+  const [showLocker, setShowLocker] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
+
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+   
+
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchSession = async () => {
+useEffect(() => {
+  const fetchSession = async () => {
+    try {
       const user = await checkSession();
       if (!user) {
-        setTimeout(() => navigate("/login"), 0);
+        navigate("/login");
         return;
       }
 
@@ -43,9 +55,18 @@ const Sidebar = () => {
       if (user.role !== "superadmin") {
         setBranchId(user.branch_id);
       }
-    };
-    fetchSession();
-  }, [navigate]);
+    } catch (err) {
+      // ถ้าเชื่อมต่อ backend ไม่ได้
+      navigate("/login");
+    } finally {
+      setIsCheckingSession(false); // ✅ ตรวจเสร็จแล้ว
+    }
+  };
+
+  fetchSession();
+}, [navigate]);
+
+
 
   useEffect(() => {
     if (branchId) {
@@ -71,7 +92,13 @@ const Sidebar = () => {
     }
   };
 
-  return (
+  const renderToggle = (state, setState) => (
+    <span onClick={() => setState(!state)} style={{ cursor: "pointer" }}>
+      {state ? <FaChevronDown /> : <FaChevronRight />}
+    </span>
+  );
+
+   return (
     <div className={`sidebar-container ${isOpen ? "open" : ""}`}>
       <button className="sidebar-toggle" onClick={() => setIsOpen(!isOpen)}>
         {isOpen ? <FaTimes /> : <FaBars />}
@@ -79,39 +106,61 @@ const Sidebar = () => {
 
       <div className="sidebar">
         <div>
-          <h2 className="sidebar-section-title">เมนูหลัก</h2>
-          <ul>
-            <li><Link to="/dashboard"><FaTachometerAlt className="sidebar-icon" />{isOpen && <span className="sidebar-text">หน้าหลัก</span>}</Link></li>
-            <li><Link to="/queue"><FaListUl className="sidebar-icon" />{isOpen && <span className="sidebar-text">จัดการคิวงาน</span>}</Link></li>
-            <li><Link to="/appointments"><FaCalendarAlt className="sidebar-icon" />{isOpen && <span className="sidebar-text">จัดการนัดหมาย</span>}</Link></li>
-            <li><Link to="/customers"><FaUserFriends className="sidebar-icon" />{isOpen && <span className="sidebar-text">ลูกค้า</span>}</Link></li>
-          </ul>
-          <br />
+          {/* เมนูหลัก */}
+          <h1
+            className="sidebar-section-title"
+            onClick={() => setShowMainMenu(!showMainMenu)}
+            style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            {showMainMenu ? <FaChevronDown /> : <FaChevronRight />} เมนูหลัก
+          </h1>
+          {showMainMenu && (
+            <ul>
+              <li><Link to="/dashboard"><FaTachometerAlt className="sidebar-icon" />{isOpen && <span className="sidebar-text">หน้าหลัก</span>}</Link></li>
+              <li><Link to="/queue"><FaListUl className="sidebar-icon" />{isOpen && <span className="sidebar-text">จัดการคิวงาน</span>}</Link></li>
+              <li><Link to="/appointments"><FaCalendarAlt className="sidebar-icon" />{isOpen && <span className="sidebar-text">จัดการนัดหมาย</span>}</Link></li>
+              <li><Link to="/customers"><FaUserFriends className="sidebar-icon" />{isOpen && <span className="sidebar-text">ลูกค้า</span>}</Link></li>
+              <li><Link to="/services"><FaTools className="sidebar-icon" />{isOpen && <span className="sidebar-text">บริการ</span>}</Link></li>
+              <li><Link to="/payouts"><FaMoneyBillWave className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายจ่าย</span>}</Link></li>
+              <li><Link to="/reports"><FaChartBar className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายงาน</span>}</Link></li>
+            </ul>
+          )}
+          
 
-          <h2 className="sidebar-section-title">งานรอง</h2>
-          <ul>
-            <li><Link to="/services"><FaTools className="sidebar-icon" />{isOpen && <span className="sidebar-text">บริการ</span>}</Link></li>
-            <li><Link to="/payouts"><FaMoneyBillWave className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายจ่าย</span>}</Link></li>
-            <li><Link to="/reports"><FaChartBar className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายงาน</span>}</Link></li>
-          </ul>
-          <br />
+          {/* Smart Locker */}
+          <h2
+            className="sidebar-section-title"
+            onClick={() => setShowLocker(!showLocker)}
+            style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            {showLocker ? <FaChevronDown /> : <FaChevronRight />} Smart Locker
+          </h2>
+          {showLocker && (
+            <ul>
+              <li><Link to="/adminLocker/pending-pickup"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายการรอรับจากตู้</span>}</Link></li>
+              <li><Link to="/adminLocker/returntolocker"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">ส่งคืน Locker</span>}</Link></li>
+              <li><Link to="/adminLocker/lockers"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายการ Locker</span>}</Link></li>
+            </ul>
+          )}
 
-          <h2 className="sidebar-section-title">Smart Locker</h2>
-          <ul>
-            <li><Link to="/adminLocker/pending-pickup"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายการรอรับจากตู้</span>}</Link></li>
-            <li><Link to="/adminLocker/returntolocker"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">ส่งคืน Locker</span>}</Link></li>
-            <li><Link to="/adminLocker/lockers"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายการ Locker</span>}</Link></li>
-          </ul>
-
+          {/* สำหรับผู้ดูแล */}
           {isSuperAdmin && (
             <>
-              <h2 className="sidebar-section-title">สำหรับผู้ดูแล</h2>
-              <ul>
-                <li><Link to="/employee"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">พนักงาน</span>}</Link></li>
-                <li><Link to="/branch"><FaBuilding className="sidebar-icon" />{isOpen && <span className="sidebar-text">สาขา</span>}</Link></li>
-                <li><Link to="/users"><FaUserTie className="sidebar-icon" />{isOpen && <span className="sidebar-text">ผู้ใช้งาน</span>}</Link></li>
-                <li><Link to="/payments"><FaCreditCard className="sidebar-icon" />{isOpen && <span className="sidebar-text">ชำระเงิน*</span>}</Link></li>
-              </ul>
+              <h2
+                className="sidebar-section-title"
+                onClick={() => setShowAdmin(!showAdmin)}
+                style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                {showAdmin ? <FaChevronDown /> : <FaChevronRight />} สำหรับผู้ดูแล
+              </h2>
+              {showAdmin && (
+                <ul>
+                  <li><Link to="/employee"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">พนักงาน</span>}</Link></li>
+                  <li><Link to="/branch"><FaBuilding className="sidebar-icon" />{isOpen && <span className="sidebar-text">สาขา</span>}</Link></li>
+                  <li><Link to="/users"><FaUserTie className="sidebar-icon" />{isOpen && <span className="sidebar-text">ผู้ใช้งาน</span>}</Link></li>
+                  <li><Link to="/payments"><FaCreditCard className="sidebar-icon" />{isOpen && <span className="sidebar-text">ชำระเงิน*</span>}</Link></li>
+                </ul>
+              )}
             </>
           )}
         </div>

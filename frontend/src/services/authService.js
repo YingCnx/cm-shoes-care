@@ -5,8 +5,8 @@ export const loginAdmin = async (email, password) => {
   return await api.post("/auth/admin/login", { email, password });
 };
 
-export const loginEmployee = (email, password) => {
-  return api.post("/auth/login", { email, password });
+export const loginEmployee = (email, password, branch_id) => {
+  return api.post("/auth/login", { email, password, branch_id });
 };
 
 // ✅ Logout

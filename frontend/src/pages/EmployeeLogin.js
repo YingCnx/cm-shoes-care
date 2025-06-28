@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginEmployee } from '../services/authService'; // ✅ ใช้จาก authService
-import { checkSession } from '../services/authService'; // ✅ ตรวจ session ผ่าน cookie
+import { loginEmployee, checkSession } from '../services/authService';
+import { getAllBranchesPublic } from '../services/api';
 import Input from '../components/ui/input';
 import Button from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -11,24 +11,35 @@ import './Login.css';
 const EmployeeLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [branches, setBranches] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState("");
   const navigate = useNavigate();
 
-  // ✅ ตรวจว่าเคย login แล้วหรือไม่
+  // ✅ ตรวจ session
   useEffect(() => {
     const verifySession = async () => {
       const user = await checkSession();
       if (user) {
-        //console.log("✅ Already logged in:", user);
         navigate("/dashboard");
       }
     };
     verifySession();
   }, [navigate]);
 
+  // ✅ โหลดรายชื่อสาขา
+  useEffect(() => {
+    const fetchBranches = async () => {
+      const res = await getAllBranchesPublic();
+      setBranches(res.data);
+    };
+    fetchBranches();
+  }, []);
+
   const handleLogin = async (e) => {
     e.preventDefault();
+    //console.log("📥 Employee Login Attempt:", email, "Branch:", selectedBranch);
     try {
-      await loginEmployee(email, password); // ✅ ไม่ต้องอ่าน token
+      await loginEmployee(email, password, selectedBranch); // ✅ ส่ง branch_id ไปด้วย
       navigate("/dashboard");
     } catch (err) {
       const msg =
@@ -69,6 +80,23 @@ const EmployeeLogin = () => {
                 className="input-field"
               />
             </div>
+
+            <div className="input-group">
+              <select
+                value={selectedBranch}
+                onChange={(e) => setSelectedBranch(e.target.value)}
+                required
+                className="input-field"
+              >
+                <option value="">-- เลือกสาขา --</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="button-container">
               <Button type="submit" className="login-button">Login</Button>
             </div>

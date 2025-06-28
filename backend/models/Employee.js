@@ -89,6 +89,14 @@ class Employee {
             throw err;
         }
     }
+
+    static async updatePassword(id, hashedPassword) {
+        const result = await pool.query(
+            "UPDATE employees SET password = $1 WHERE id = $2",
+            [hashedPassword, id]
+        );
+        return result;
+    }
 }
 
 export default Employee;

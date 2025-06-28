@@ -76,7 +76,7 @@ export const updateCustomer = async (req, res) => {
 // ✅ DELETE (SuperAdmin only)
 export const deleteCustomer = async (req, res) => {
   try {
-    /* if (!req.user?.isSuperAdmin) {
+    /* if (!req.session.user?.isSuperAdmin)
       return res.status(403).json({ message: "เฉพาะ SuperAdmin เท่านั้นที่สามารถลบลูกค้าได้" });
     } */
 

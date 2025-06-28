@@ -7,14 +7,6 @@ const API = axios.create({
   
 });
 
-// ✅ ดึง Token จาก localStorage และใส่ใน Header
-/* API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-}, (error) => Promise.reject(error)); */
 
 //======================= 🏢 AUTH =======================//
 // ✅ ล็อกอิน
@@ -172,6 +164,9 @@ export const getBranches = async () => {
     throw error;
   }
 };
+export const getAllBranchesPublic = () => {
+  return API.get('/branches/public');
+};
 export const getBranchesById = (id) => API.get(`/branches/${id}`);
 export const createBranch = (data) => API.post("/branches", data);
 export const updateBranch = (id, data) => API.put(`/branches/${id}`, data);
@@ -183,6 +178,9 @@ export const getEmployees = (branch_id = null) => API.get("/employees", { params
 export const createEmployee = (data) => API.post("/employees", data);
 export const updateEmployee = (id, data) => API.put(`/employees/${id}`, data);
 export const deleteEmployee = (id) => API.delete(`/employees/${id}`);
+export const updateEmployeePassword = async (id, newPassword) => {
+  return await API.put(`/employees/${id}/password`, { password: newPassword });
+};
 //======================= 👥 CUSTOMERS =======================//
 
 export const getCustomers = (branch_id = null) => API.get("/customers", { params: { branch_id } });

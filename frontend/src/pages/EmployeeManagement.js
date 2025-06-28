@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getEmployees, createEmployee, updateEmployee, deleteEmployee, getBranches } from "../services/api";
+import { getEmployees, createEmployee, updateEmployee, deleteEmployee, getBranches,updateEmployeePassword } from "../services/api";
 import { jwtDecode } from "jwt-decode";
 import AddEmployeeModal from "../components/AddEmployeeModal";
 import { checkSession } from "../services/authService";
 import "../assets/css/bootstrap.min.css";
 import './EmployeeManagement.css';
+import ChangePasswordModal from "../components/ChangePasswordModal";
+
 
 const EmployeeManagement = () => {
     const navigate = useNavigate();
@@ -16,6 +18,9 @@ const EmployeeManagement = () => {
     const [employeeId, setEmployeeId] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
     const [editEmployee, setEditEmployee] = useState(null);
+
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
 
 
     useEffect(() => {
@@ -128,6 +133,23 @@ const EmployeeManagement = () => {
         }
     };
 
+        
+    const handleChangePassword = (id) => {
+    setSelectedEmployeeId(id);
+    setShowPasswordModal(true);
+    };
+
+    const handleSavePassword = async (id, newPassword) => {
+    try {
+        await updateEmployeePassword(id, newPassword);
+        alert("✅ เปลี่ยนรหัสผ่านเรียบร้อยแล้ว");
+        setShowPasswordModal(false);
+    } catch (error) {
+        console.error("🔴 Error changing password:", error);
+        alert("❌ เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน");
+    }
+    };
+
     return (
         <div className="employee-container">
             <h2>👥 ระบบจัดการพนักงาน</h2>
@@ -170,9 +192,31 @@ const EmployeeManagement = () => {
                             <td>{employee.role}</td>
                             <td>{employee.branch_name || "-"}</td>
                             <td>
-                                <button className="btn btn-warning btn-sm" onClick={() => { setEditEmployee(employee); setShowAddModal(true); }}>✏️ แก้ไข</button>
-                                <button className="btn btn-danger btn-sm ms-2" onClick={() => handleDelete(employee.id)}>❌ ลบ</button>
-                            </td>
+                                <button
+                                    className="btn btn-warning btn-sm"
+                                    onClick={() => {
+                                    setEditEmployee(employee);
+                                    setShowAddModal(true);
+                                    }}
+                                >
+                                    ✏️ แก้ไข
+                                </button>
+                                 <button
+                                    className="btn btn-secondary btn-sm ms-2"
+                                    onClick={() => handleChangePassword(employee.id)}
+                                >
+                                    🔐 เปลี่ยนรหัสผ่าน
+                                </button>
+                                <button
+                                    className="btn btn-danger btn-sm ms-2"
+                                    onClick={() => handleDelete(employee.id)}
+                                >
+                                    ❌ ลบ
+                                </button>
+
+                               
+                                </td>
+
                         </tr>
                     ))}
                 </tbody>
@@ -190,6 +234,13 @@ const EmployeeManagement = () => {
                     employeeData={editEmployee}
                 />
             )}
+            
+            <ChangePasswordModal
+                show={showPasswordModal}
+                onClose={() => setShowPasswordModal(false)}
+                onSave={handleSavePassword}
+                employeeId={selectedEmployeeId}
+                />
         </div>
     );
 };

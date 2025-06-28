@@ -1,50 +1,57 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import pool from '../config/database.js';
 import dotenv from 'dotenv';
 
 dotenv.config(); // โหลด .env
 
 const router = express.Router();
-const SECRET_KEY = process.env.JWT_SECRET || "default_secret";
 
-// 🔐 ล็อกอินแอดมิน
+// 🔐 ล็อกอินแอดมิน (ใช้ session)
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log("📥 Login Attempt:", email);
 
   try {
     const result = await pool.query('SELECT * FROM admins WHERE email = $1', [email]);
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ message: 'Invalid credentials (User not found)' });
+      return res.status(401).json({ message: 'ไม่พบผู้ใช้งาน' });
     }
 
     const admin = result.rows[0];
     const isMatch = await bcrypt.compare(password, admin.password);
 
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials (Password mismatch)' });
+      return res.status(401).json({ message: 'รหัสผ่านไม่ถูกต้อง' });
     }
 
-    const token = jwt.sign(
-      { id: admin.id, email: admin.email, role: 'superadmin' },
-      SECRET_KEY,
-      { expiresIn: '1h' }
-    );
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'Strict',
-      maxAge: 60 * 60 * 1000, // 1 hour
-    });
+    // ✅ เซ็ต session
+    req.session.user = {
+      id: admin.id,
+      email: admin.email,
+      role: 'superadmin',
+      isSuperAdmin: true
+    };
 
     res.json({ message: 'Login success' });
   } catch (error) {
     console.error("🔴 Login Error:", error);
     res.status(500).json({ message: 'Server error' });
   }
+});
+
+// 🚪 Logout
+router.post('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      console.error("🔴 Logout Error:", err);
+      return res.status(500).json({ message: 'Logout failed' });
+    }
+
+    res.clearCookie('connect.sid'); // default session cookie name
+    res.json({ message: 'Logout success' });
+  });
 });
 
 // 🧑‍💻 สร้างแอดมินใหม่
