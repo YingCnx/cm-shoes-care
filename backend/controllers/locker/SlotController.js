@@ -47,6 +47,8 @@ export const startDeposit = async (req, res) => {
   await Notification.insert({
     type: 'locker',
     message: `ส่งรองเท้า ${total_pairs} คู่ | Locker ${lockerInfo.locker_name} ช่อง${slot.slot_number} วันที่ ${now}`,
+    branch_id: lockerInfo.branch_id,
+    io
   });
 
   return res.json({

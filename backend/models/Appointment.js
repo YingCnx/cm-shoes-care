@@ -24,7 +24,7 @@ static async getAll() {
       LEFT JOIN 
         customers c ON a.customer_id = c.id
       ORDER BY 
-        a.appointment_date ASC
+         a.appointment_date + a.appointment_time::interval ASC;
     `);
 
     return result.rows;
@@ -60,7 +60,7 @@ static async getByBranch(branch_id) {
       WHERE 
         a.branch_id = $1 and a.status != 'ยกเลิก'
       ORDER BY 
-        a.appointment_date ASC
+      a.appointment_date + a.appointment_time::interval ASC;
     `, [branch_id]);
 
     return result.rows;

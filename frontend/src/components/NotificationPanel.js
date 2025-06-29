@@ -1,5 +1,3 @@
-// 📦 NotificationPanel.js - Facebook Style + คลิกที่แถบข้อความ = อ่านแล้ว
-
 import React, { useEffect, useState } from 'react';
 import { Bell, Check, X } from 'lucide-react';
 import { getNotifications, markNotificationAsRead } from '../services/api.js';
@@ -10,6 +8,9 @@ function NotificationPanel() {
   const [notifications, setNotifications] = useState([]);
   const [showPanel, setShowPanel] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [branchId, setBranchId] = useState(null);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const fetchNotifications = async () => {
     setIsLoading(true);
@@ -25,7 +26,7 @@ function NotificationPanel() {
 
   const markAsRead = async (id) => {
     try {
-      await markNotificationAsRead(id); // ✅ ส่ง id
+      await markNotificationAsRead(id);
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
@@ -34,9 +35,11 @@ function NotificationPanel() {
     }
   };
 
-  const formatTimeAgo = (date) => {
+  const formatTimeAgo = (dateStr) => {
     const now = new Date();
-    const diff = now - new Date(date);
+    const created = new Date(dateStr);
+    const diff = now - created;
+
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
@@ -47,46 +50,86 @@ function NotificationPanel() {
     return `${days} วันที่แล้ว`;
   };
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const playNotificationSound = () => {
+    const audio = new Audio('/sounds/notification.mp3');
+    audio.play().catch((err) => {
+      console.warn('🔇 ไม่สามารถเล่นเสียง:', err);
+    });
+  };
 
-    useEffect(() => {
+  // ✅ Step 1: ดึง branchId จาก sessionStorage
+useEffect(() => {
+  const handleBranchIdSet = () => {
+    const storedBranchId = Number(sessionStorage.getItem('branch_id'));
+    if (storedBranchId) {
+      setBranchId(storedBranchId);
+    }
+  };
 
-      console.log('🧪 เริ่มเชื่อม socket...');
+  // โหลดตอนแรก
+  handleBranchIdSet();
 
-      fetchNotifications();
+  // ฟัง event จาก login
+  window.addEventListener("branch_id_set", handleBranchIdSet);
 
-      const handleNewNotification = (data) => {
-        console.log('📢 แจ้งเตือนใหม่:', data);
+  return () => {
+    window.removeEventListener("branch_id_set", handleBranchIdSet);
+  };
+}, []);
 
-           const audio = new Audio('/sounds/notification.mp3');
-            audio.play().catch(err => console.warn('🔇 play error:', err));
+  // ✅ Step 2: join room เมื่อ branchId + socket เชื่อมต่อแล้ว
+useEffect(() => {
+  if (!branchId) return;
 
-        console.log(audio);
+  // ✅ บังคับให้ connect ถ้ายังไม่เชื่อม
+  if (!socket.connected) {
+    //console.log("🚀 Connecting socket...");
+    socket.connect();
+  }
 
-        setNotifications((prev) => [
-          {
-            ...data,
-            read: false,
-            created_at: new Date().toISOString(),
-          },
-          ...prev
-        ]);
-      };
+  const joinRoom = () => {
+    // console.log("✅ Socket connected:", socket); // ✅ log ตอนเชื่อมต่อ
+    socket.emit('join-branch', { branch_id: branchId });
+    //console.log('📡 เข้าห้อง branch-' + branchId);
+  };
 
-      socket.on('new-notification', handleNewNotification);
+  if (socket.connected) {
+    joinRoom();
+  } else {
+    socket.once('connect', joinRoom); // ✅ ใช้ .once ป้องกันยิงซ้ำ
+    //console.log('🕐 รอเชื่อมต่อ...');
+  }
 
-      return () => {
-        socket.off('new-notification', handleNewNotification);
-      };
-    }, []);
+   // ✅ log เมื่อตัดการเชื่อมต่อ
+  socket.on('disconnect', () => {
+    //console.log('❌ Socket disconnected');
+  });
+
+  fetchNotifications();
+
+  const handleNewNotification = (data) => {
+   // console.log('📢 แจ้งเตือนใหม่:', data);
+    playNotificationSound();
+    setNotifications((prev) => [
+      { ...data, read: false, created_at: new Date().toISOString() },
+      ...prev,
+    ]);
+  };
+
+  socket.on('new-notification', handleNewNotification);
+
+  return () => {
+    socket.off('new-notification', handleNewNotification);
+    socket.off('connect', joinRoom);
+    socket.emit('leave-branch', { branch_id: branchId });
+   // console.log('🚪 ออกจากห้อง branch-' + branchId);
+  };
+}, [branchId]);
+
 
   return (
-    <div className="notification-container" style={{ position: 'fixed', top: '20px', right: '30px', zIndex: 9999 }}>
-
-      <button
-        onClick={() => setShowPanel(!showPanel)}
-        className="notification-bell"
-      >
+    <div className="notification-container" style={{ position: 'fixed', top: '45px', right: '45px', zIndex: 9999 }}>
+      <button onClick={() => setShowPanel(!showPanel)} className="notification-bell">
         <Bell size={24} />
         {unreadCount > 0 && (
           <span className="notification-badge">
@@ -120,7 +163,7 @@ function NotificationPanel() {
                 <li
                   key={notification.id}
                   className={`panel-item ${notification.read ? 'read' : 'unread'}`}
-                  onClick={() => !notification.read && markAsRead(notification.id)} // ✅ คลิกแถบ
+                  onClick={() => !notification.read && markAsRead(notification.id)}
                 >
                   <div className="panel-message">{notification.message}</div>
                   <div className="panel-time">{formatTimeAgo(notification.created_at)}</div>
@@ -128,7 +171,7 @@ function NotificationPanel() {
                     <button
                       className="read-btn"
                       onClick={(e) => {
-                        e.stopPropagation(); // ❗ ป้องกันคลิกซ้อน
+                        e.stopPropagation();
                         markAsRead(notification.id);
                       }}
                       title="อ่านแล้ว"
@@ -140,9 +183,7 @@ function NotificationPanel() {
               ))
             )}
           </ul>
-
         </div>
-        
       )}
     </div>
   );

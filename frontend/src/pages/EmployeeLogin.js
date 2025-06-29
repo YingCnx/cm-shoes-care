@@ -7,6 +7,7 @@ import Button from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Lock, Mail } from 'lucide-react';
 import './Login.css';
+import socket from '../services/socket.js';
 
 const EmployeeLogin = () => {
   const [email, setEmail] = useState("");
@@ -19,6 +20,15 @@ const EmployeeLogin = () => {
   useEffect(() => {
     const verifySession = async () => {
       const user = await checkSession();
+      if (user?.branch_id) {
+          sessionStorage.setItem("branch_id", user.branch_id);
+
+          connectSocket(); // ✅ เรียกให้ connect ก่อน
+
+          socket.emit("join-branch", { branch_id: user.branch_id });
+          window.dispatchEvent(new Event("branch_id_set"));
+        }
+              
       if (user) {
         navigate("/dashboard");
       }
@@ -40,6 +50,13 @@ const EmployeeLogin = () => {
     //console.log("📥 Employee Login Attempt:", email, "Branch:", selectedBranch);
     try {
       await loginEmployee(email, password, selectedBranch); // ✅ ส่ง branch_id ไปด้วย
+       // 🟡 ตรวจ session อีกรอบเพื่อให้แน่ใจว่ามีข้อมูล session (เช่น branch_id)
+    const user = await checkSession();
+
+    if (user?.branch_id) {
+      sessionStorage.setItem("branch_id", user.branch_id);
+      socket.emit('join-branch', { branch_id: user.branch_id }); // ✅ บอก socket ให้เข้าห้องทันที
+    }
       navigate("/dashboard");
     } catch (err) {
       const msg =

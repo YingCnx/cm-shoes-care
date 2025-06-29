@@ -3,14 +3,12 @@ import Notification from '../models/Notification.js';
 
 export const createNotification = async (req, res) => {
   try {
-    const { type, message } = req.body;
+    const { type, message, branch_id = null } = req.body; // ✅ รองรับส่ง branch_id
 
-    // 🟢 บันทึกลงฐานข้อมูล
-    const notification = await Notification.insert({ type, message });
-
-    // 📢 ส่ง event ไปยัง frontend
     const io = req.app.get('io');
-    io.emit('new-notification', notification);
+
+    // 🟢 บันทึก + ส่ง socket ภายใน insert()
+    const notification = await Notification.insert({ type, message, branch_id, io });
 
     // ✅ ตอบกลับ client
     res.json(notification);
@@ -22,12 +20,28 @@ export const createNotification = async (req, res) => {
 
 export const getNotifications = async (req, res) => {
   try {
-    const result = await Notification.getLatest();
+    const user = req.session.user;
+
+    if (!user) {
+      return res.status(401).json({ message: 'ไม่ได้รับอนุญาต' });
+    }
+
+    let result;
+    if (user.isSuperAdmin) {
+      result = await Notification.getLatestAll(); // 🟢 ดึงทั้งหมด
+    } else if (user.branch_id) {
+      result = await Notification.getLatest(user.branch_id); // 🔵 เฉพาะสาขา
+    } else {
+      return res.status(400).json({ message: 'ไม่พบ branch_id' });
+    }
+
     res.json(result);
   } catch (err) {
+    console.error("🔴 Notification Error:", err);
     res.status(500).json({ message: 'ไม่สามารถดึงรายการแจ้งเตือนได้' });
   }
 };
+
 
 export const markNotificationAsRead = async (req, res) => {
   try {

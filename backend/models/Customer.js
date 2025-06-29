@@ -65,12 +65,20 @@ static async update(id, { name, phone, address, status, notes, branch_id, origin
     return rows[0];
   }
 
-    static async isPhoneDuplicate(phone, branch_id) {
+  static async isPhoneDuplicate(phone, branch_id) {
     const { rows } = await pool.query(
       `SELECT id FROM customers WHERE phone = $1 AND branch_id = $2`,
       [phone, branch_id]
     );
     return rows.length > 0;
+  }
+
+  static async updatecustomersource(phone, branch_id) {
+    const { rows } = await pool.query(
+      `UPDATE customers SET origin_source = 'locker' WHERE phone = $1 AND branch_id = $2 RETURNING *`,
+      [phone, branch_id]
+    );
+    return rows[0];
   }
 
 static async findCustomerByPhone(phone) {

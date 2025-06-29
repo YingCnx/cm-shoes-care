@@ -264,6 +264,8 @@ export const updateStatusWithImage = async (req, res) => {
         branch_id: tx.branch_id,
         locker_name: tx.locker_name
       });
+    }else{
+      customer = await Customer.updatecustomersource(tx.phone, tx.branch_id);
     }
 
     if (!customer?.id) {

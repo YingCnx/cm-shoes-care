@@ -1,5 +1,7 @@
 import Appointment from "../models/Appointment.js";
 import Queue from "../models/Queue.js";
+import Notification from '../models/Notification.js'; 
+
 
 
 // 📌 1️⃣ ดึงรายการนัดหมาย (Admin เห็นทุกสาขา / Employee เห็นเฉพาะของตัวเอง)
@@ -29,7 +31,7 @@ export const getAppointments = async (req, res) => {
 export const getAppointmentsForQueue = async (req, res) => {
   try {
     const { branch_id } = req.query;
-    const user = req.user;
+    const user = req.session.user;
     let appointments = user.isSuperAdmin
       ? (branch_id ? await Appointment.getAppointmentsForQueue(branch_id) : await Appointment.getAppointmentsForQueueAll())
       : await Appointment.getAppointmentsForQueue(user.branch_id);
@@ -45,7 +47,7 @@ export const getAppointmentsForQueue = async (req, res) => {
 // 📌 2️⃣ สร้างนัดหมายใหม่ (เฉพาะพนักงานสาขานั้น ๆ)
 export const createAppointment = async (req, res) => {
   try {
-    const user = req.user;
+    const user = req.session.user;
     const {
       customer_id,
       customer_name,
@@ -80,6 +82,17 @@ export const createAppointment = async (req, res) => {
       queue_id // ✅ ส่งให้ model
     });
 
+    const now = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
+    const io = req.app.get("io");
+    
+    await Notification.insert({
+      type: 'appointment',
+      branch_id,
+      message: `มีนัดหมายใหม่จากคุณ ${customer_name || phone} วันที่ ${appointment_date} เวลา ${appointment_time} (เพิ่มเมื่อ ${now})`,
+      io
+    });
+
+
     res.status(201).json({ message: "✅ Appointment created successfully" });
   } catch (error) {
     console.error("🔴 Error creating appointment:", error);
@@ -91,7 +104,7 @@ export const createAppointment = async (req, res) => {
 // 📌 3️⃣ อัปเดตสถานะนัดหมาย (ต้องอยู่ในสาขาตัวเอง หรือเป็น Admin)
 export const updateAppointmentStatus = async (req, res) => {
   try {
-    const user = req.user;
+    const user = req.session.user;
     const appointment = await Appointment.getById(req.params.id);
 
     if (!appointment) {
@@ -157,7 +170,7 @@ export const updateAppointmentQueueId = async (req, res) => {
 // 📌 4️⃣ อัปเดตรายละเอียดนัดหมาย (ต้องอยู่ในสาขาตัวเอง หรือเป็น Admin)
 export const updateAppointment = async (req, res) => {
   try {
-    const user = req.user;
+    const user = req.session.user;
     const { id } = req.params;
     const appointment = await Appointment.getById(id);
 
@@ -180,7 +193,7 @@ export const updateAppointment = async (req, res) => {
 // 📌 5️⃣ ลบนัดหมาย (ต้องอยู่ในสาขาตัวเอง หรือเป็น Admin)
 export const deleteAppointment = async (req, res) => {
   try {
-    const user = req.user;
+    const user = req.session.user;
     const appointment = await Appointment.getById(req.params.id);
 
     if (!appointment) {
