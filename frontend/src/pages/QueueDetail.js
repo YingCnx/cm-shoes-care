@@ -568,7 +568,7 @@ const QueueDetail = () => {
                 </div>
 
                 {/* ✅ หัวคิว */}
-                <h5 className="mb-3">🏷️ คิวงาน #{queue_id} - สาขา {queue.branch_name}</h5>
+                <h5 className="mb-3">🏷️ คิวงาน #{queue.queue_code} - สาขา {queue.branch_name}</h5>
             </div>
 
             <div className="row mb-2">

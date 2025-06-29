@@ -165,7 +165,7 @@ export const generateInvoice = async (req, res) => {
       ctx.font = 'bold 24px "Noto Sans Thai"';
       ctx.fillText(`📜 ใบแจ้งราคา`, 50, 130);
       ctx.font = '22px "Noto Sans Thai"';
-      ctx.fillText(`🆔 หมายเลขคิว: #${queue_id}`, 50, 170);
+      ctx.fillText(`🆔 หมายเลขคิว: #${queue.queue_code}`, 50, 170);
       ctx.fillText(`👤 ลูกค้า: ${queue.customer_name}`, 50, 200);
       ctx.fillText(`📞 เบอร์โทร: ${queue.phone}`, 50, 230);
       ctx.fillText(`📅 วันที่: ${formatDate(new Date())}`, 50, 260);

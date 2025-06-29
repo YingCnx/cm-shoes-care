@@ -217,7 +217,7 @@ const AppointmentsAdmin = () => {
               <td>{index + 1}</td>
               <td>{appt.customer_name}</td>
               <td>{appt.phone}</td>
-              <td>{appt.location}</td>
+              <td  className='td-hide'>{appt.location}</td>
               <td>{appt.shoe_count}</td>
               <td>{formatDate(appt.appointment_date)}</td>
               <td>{appt.appointment_time.slice(0, 5)} น.</td>

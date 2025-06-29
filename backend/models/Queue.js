@@ -3,19 +3,87 @@ import pool from "../config/database.js";
   class Queue {
 
    // ✅ ฟังก์ชันสร้าง Queue ใหม่
-   static async create({customer_id, customer_name, phone, location, total_pairs, total_price = 0,received_date, delivery_date, branch_id,source,locker_id,slot_id }) {
-    try {
-        const result = await pool.query(
-            `INSERT INTO queue (customer_id,customer_name, phone, location, total_pairs, total_price, delivery_date, branch_id, status, received_date, source, locker_id, slot_id) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7,$8, 'รับเข้า', $9, $10, $11, $12) 
-             RETURNING id`, // ✅ ต้องแน่ใจว่า column ที่ใส่ค่ามีครบ
-            [customer_id,customer_name, phone, location, total_pairs, total_price, delivery_date, branch_id,received_date,source,locker_id,slot_id]
-        );
-        return result.rows[0].id; // ✅ Return queue_id
-    } catch (error) {
-        throw new Error(`🔴 Error creating queue: ${error.message}`);
-    }
+   
+//    static async create({customer_id, customer_name, phone, location, total_pairs, total_price = 0,received_date, delivery_date, branch_id,source,locker_id,slot_id }) {
+//     try {
+//         const result = await pool.query(
+//             `INSERT INTO queue (customer_id,customer_name, phone, location, total_pairs, total_price, delivery_date, branch_id, status, received_date, source, locker_id, slot_id) 
+//              VALUES ($1, $2, $3, $4, $5, $6, $7,$8, 'รับเข้า', $9, $10, $11, $12) 
+//              RETURNING id`, // ✅ ต้องแน่ใจว่า column ที่ใส่ค่ามีครบ
+//             [customer_id,customer_name, phone, location, total_pairs, total_price, delivery_date, branch_id,received_date,source,locker_id,slot_id]
+//         );
+//         return result.rows[0].id; // ✅ Return queue_id
+//     } catch (error) {
+//         throw new Error(`🔴 Error creating queue: ${error.message}`);
+//     }
+// }
+
+static async create({
+  customer_id,
+  customer_name,
+  phone,
+  location,
+  total_pairs,
+  total_price = 0,
+  received_date,
+  delivery_date,
+  branch_id,
+  source,
+  locker_id,
+  slot_id
+}) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1️⃣ อัปเดต last_queue_number ของสาขา +1 และดึงค่าล่าสุด
+    const counterRes = await client.query(
+      `UPDATE branch_queue_counter
+       SET last_queue_number = last_queue_number + 1
+       WHERE branch_id = $1
+       RETURNING last_queue_number`,
+      [branch_id]
+    );
+    const queue_number = counterRes.rows[0].last_queue_number;
+
+    // 2️⃣ สร้างคิวใหม่พร้อมเลข queue_number
+    const result = await client.query(
+      `INSERT INTO queue (
+        queue_number, customer_id, customer_name, phone, location,
+        total_pairs, total_price, delivery_date, branch_id, status,
+        received_date, source, locker_id, slot_id
+      ) VALUES (
+        $1, $2, $3, $4, $5,
+        $6, $7, $8, $9, 'รับเข้า',
+        $10, $11, $12, $13
+      ) RETURNING id`,
+      [
+        queue_number,
+        customer_id,
+        customer_name,
+        phone,
+        location,
+        total_pairs,
+        total_price,
+        delivery_date,
+        branch_id,
+        received_date,
+        source,
+        locker_id,
+        slot_id
+      ]
+    );
+
+    await client.query('COMMIT');
+    return result.rows[0].id; // ✅ return queue_id
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw new Error(`🔴 Error creating queue: ${error.message}`);
+  } finally {
+    client.release();
+  }
 }
+
   
 
 
@@ -58,42 +126,57 @@ import pool from "../config/database.js";
   static async getByBranch(branch_id) {
     try {
         const result = await pool.query(`
-            SELECT 
-          q.id AS queue_id, 
-          c.name AS customer_name, 
-          c.phone, 
-          q.location, 
-          q.total_pairs, 
-          q.total_price, 
-          q.delivery_date, 
-          q.status, 
-          q.received_date,
-          q.payment_status,
-          q.source,             -- ✅ แหล่งที่มา เช่น locker, facebook, ฯลฯ
-          q.return_slot_id,     -- ✅ ช่องที่ใช้ส่งคืน
-          q.locker_id,          -- ✅ รหัสตู้
-          q.slot_id,            -- ✅ ช่องที่ใช้รับเข้า
-          json_agg(
-              json_build_object(
-                  'service_id', qi.service_id,
-                  'service_name', s.service_name,
-                  'price_per_pair', qi.price_per_pair
-              )
-          ) FILTER (WHERE qi.service_id IS NOT NULL) AS services
-      FROM queue q
-      LEFT JOIN customers c ON q.customer_id = c.id
-      LEFT JOIN queue_items qi ON q.id = qi.queue_id
-      LEFT JOIN services s ON qi.service_id = s.id
-      WHERE q.branch_id = $1  AND q.status != 'ยกเลิก'
-      GROUP BY 
-          q.id, 
-          c.name, 
-          c.phone,
-          q.source,
-          q.return_slot_id,
-          q.locker_id,
-          q.slot_id
-      ORDER BY q.delivery_date ASC NULLS LAST;
+           SELECT 
+              q.id AS queue_id, 
+              b.code || '-' || LPAD(q.queue_number::TEXT, 5, '0') AS queue_code,
+              c.name AS customer_name, 
+              c.phone, 
+              q.location, 
+              q.total_pairs, 
+              q.total_price, 
+              q.delivery_date, 
+              q.status, 
+              q.received_date,
+              q.payment_status,
+              q.source,             
+              q.return_slot_id,     
+              q.locker_id,          
+              q.slot_id,            
+              json_agg(
+                  json_build_object(
+                      'service_id', qi.service_id,
+                      'service_name', s.service_name,
+                      'price_per_pair', qi.price_per_pair
+                  )
+              ) FILTER (WHERE qi.service_id IS NOT NULL) AS services
+
+          FROM queue q
+          LEFT JOIN customers c ON q.customer_id = c.id
+          LEFT JOIN queue_items qi ON q.id = qi.queue_id
+          LEFT JOIN services s ON qi.service_id = s.id
+          JOIN branches b ON q.branch_id = b.id
+
+          WHERE q.branch_id = $1 AND q.status != 'ยกเลิก'
+
+          GROUP BY 
+              q.id, 
+              b.code,
+              c.name, 
+              c.phone,
+              q.location, 
+              q.total_pairs, 
+              q.total_price, 
+              q.delivery_date, 
+              q.status, 
+              q.received_date,
+              q.payment_status,
+              q.source,
+              q.return_slot_id,
+              q.locker_id,
+              q.slot_id
+
+          ORDER BY q.delivery_date ASC NULLS LAST;
+
 
         `, [branch_id]);  // ✅ ส่งค่า branch_id ไปยัง Query
         return result.rows;
@@ -112,41 +195,58 @@ import pool from "../config/database.js";
 
       const queueResult = await pool.query(
         `
-           SELECT 
-              q.id AS queue_id, 
-              q.id AS id,                          -- ✅ เพิ่ม id เฉย ๆ ด้วย เพื่อให้ frontend ใช้ queue.id ได้เลย
-              q.customer_id,                       -- ✅ ต้องใช้สำหรับ appointment
-              q.branch_id,                         -- ✅ ต้องใช้สำหรับ appointment
-              c.name AS customer_name,            -- ✅ แสดงชื่อ
-              c.phone,                            -- ✅ แสดงเบอร์
-              q.location, 
-              q.total_pairs, 
-              q.total_price, 
-              q.delivery_date, 
-              q.status, 
-              q.received_date,
-              q.payment_status,
-              q.source,                            -- ✅ ช่องทาง
-              l.code AS locker_code,              -- ✅ รหัสตู้
-              l.name AS locker_name,              -- ✅ ชื่อตู้
-              q.slot_id,         
-              b.name AS branch_name,              -- ✅ ชื่อสาขา
-              json_agg(
-                  json_build_object(
-                      'service_id', qi.service_id,
-                      'service_name', s.service_name,
-                      'price_per_pair', qi.price_per_pair
-                  )
-              ) FILTER (WHERE qi.service_id IS NOT NULL) AS services
-          FROM queue q
-          LEFT JOIN customers c ON q.customer_id = c.id
-          LEFT JOIN queue_items qi ON q.id = qi.queue_id
-          LEFT JOIN services s ON qi.service_id = s.id
-          LEFT JOIN branches b ON q.branch_id = b.id
-          LEFT JOIN lockers l ON q.locker_id = l.id  
-          WHERE q.id = $1
-          GROUP BY q.id, q.customer_id, q.branch_id, c.name, c.phone, b.name, q.source, l.code, l.name, q.slot_id
-          ORDER BY q.delivery_date ASC NULLS LAST;
+        SELECT 
+            q.id AS queue_id, 
+            q.id AS id,       
+            b.code || '-' || LPAD(q.queue_number::TEXT, 5, '0') AS queue_code,               
+            q.customer_id,                      
+            q.branch_id,                        
+            c.name AS customer_name,           
+            c.phone,                            
+            q.location, 
+            q.total_pairs, 
+            q.total_price, 
+            q.delivery_date, 
+            q.status, 
+            q.received_date,
+            q.payment_status,
+            q.source,                           
+            l.code AS locker_code,             
+            l.name AS locker_name,             
+            q.slot_id,         
+            b.name AS branch_name,             
+            json_agg(
+                json_build_object(
+                    'service_id', qi.service_id,
+                    'service_name', s.service_name,
+                    'price_per_pair', qi.price_per_pair
+                )
+            ) FILTER (WHERE qi.service_id IS NOT NULL) AS services
+
+        FROM queue q
+        LEFT JOIN customers c ON q.customer_id = c.id
+        LEFT JOIN queue_items qi ON q.id = qi.queue_id
+        LEFT JOIN services s ON qi.service_id = s.id
+        LEFT JOIN branches b ON q.branch_id = b.id
+        LEFT JOIN lockers l ON q.locker_id = l.id  
+
+        WHERE q.id = $1
+
+        GROUP BY 
+            q.id, 
+            q.queue_number, b.code,         -- ✅ ใช้ expression แทน alias queue_code
+            q.customer_id, 
+            q.branch_id, 
+            c.name, 
+            c.phone, 
+            b.name, 
+            q.source, 
+            l.code, 
+            l.name, 
+            q.slot_id
+
+        ORDER BY q.delivery_date ASC NULLS LAST;
+
         `, [id]);  
 
       if (queueResult.rows.length === 0) {
