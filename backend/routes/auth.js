@@ -3,11 +3,6 @@ import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-
-router.get("/ping", (req, res) => {
-  res.send("✅ Auth API OK without login");
-});
-
 // ✅ ใช้ร่วมกับ authAdminRoutes, authEmployeeRoutes
 import authAdminRoutes from "./authAdmin.js";
 import authEmployeeRoutes from "./authEmployee.js";
@@ -34,6 +29,11 @@ router.post("/logout", (req, res) => {
     res.clearCookie("connect.sid"); // ล้าง session cookie
     res.json({ message: "✅ Logout success" });
   });
+});
+
+
+router.get("/ping", (req, res) => {
+  res.send("✅ Auth API OK without login");
 });
 
 
