@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // ✅ ตั้งค่า API Base URL
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: '/api',
   withCredentials: true, 
   
 });
