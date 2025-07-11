@@ -8,7 +8,6 @@ import {
     getBranches
 } from '../../services/api';
 
-
 const PendingPickupFromLocker = () => {
     const navigate = useNavigate();
     const [lockerDrops, setLockerDrops] = useState([]);
