@@ -8,6 +8,7 @@ import './../QueueAdmin.css';
 import AddLockerModal from '../../components/AddLockerModal';
 import LockerSlotModal from '../../components/LockerSlotModal';
 
+
 const LockerManagement = () => {
   const navigate = useNavigate();
   const [lockers, setLockers] = useState([]);
