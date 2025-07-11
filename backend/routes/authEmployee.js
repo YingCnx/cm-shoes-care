@@ -13,7 +13,10 @@ router.post('/login', async (req, res) => {
   console.log("📥 Employee Login Attempt:", email, "Branch:", branch_id);
 
   try {
-    const result = await pool.query('SELECT * FROM employees WHERE email = $1', [email]);
+    const result = await pool.query(
+        'SELECT * FROM employees WHERE email = $1 AND branch_id = $2',
+        [email, branch_id]
+      );
 
     if (result.rows.length === 0) {
       return res.status(401).json({ message: 'ไม่พบผู้ใช้งาน' });
@@ -24,10 +27,6 @@ router.post('/login', async (req, res) => {
 
     if (!isMatch) {
       return res.status(401).json({ message: 'รหัสผ่านไม่ถูกต้อง' });
-    }
-
-    if (!branch_id) {
-      return res.status(400).json({ message: 'กรุณาเลือกสาขา' });
     }
 
     // ✅ เซ็ต session พร้อม branch_id ที่เลือก

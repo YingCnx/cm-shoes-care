@@ -48,6 +48,11 @@ const EmployeeLogin = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     //console.log("📥 Employee Login Attempt:", email, "Branch:", selectedBranch);
+    if (!selectedBranch) {
+      alert("⚠️ กรุณาเลือกสาขาก่อนล็อกอิน");
+      return;
+    }
+    
     try {
       await loginEmployee(email, password, selectedBranch); // ✅ ส่ง branch_id ไปด้วย
        // 🟡 ตรวจ session อีกรอบเพื่อให้แน่ใจว่ามีข้อมูล session (เช่น branch_id)
