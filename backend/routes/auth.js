@@ -29,4 +29,8 @@ router.post("/logout", (req, res) => {
   });
 });
 
+router.get("/ping", (req, res) => {
+  res.send("✅ Auth API OK without login");
+});
+
 export default router;
