@@ -98,6 +98,12 @@ useEffect(() => {
     </span>
   );
 
+  const handleMenuClick = () => {
+  if (window.innerWidth <= 768) {
+    setIsOpen(false);
+  }
+};
+
    return (
     <div className={`sidebar-container ${isOpen ? "open" : ""}`}>
       <button className="sidebar-toggle" onClick={() => setIsOpen(!isOpen)}>
@@ -115,15 +121,15 @@ useEffect(() => {
             {showMainMenu ? <FaChevronDown /> : <FaChevronRight />} เมนูหลัก
           </h1>
           {showMainMenu && (
-            <ul>
-              <li><Link to="/dashboard"><FaTachometerAlt className="sidebar-icon" />{isOpen && <span className="sidebar-text">หน้าหลัก</span>}</Link></li>
-              <li><Link to="/queue"><FaListUl className="sidebar-icon" />{isOpen && <span className="sidebar-text">จัดการคิวงาน</span>}</Link></li>
-              <li><Link to="/appointments"><FaCalendarAlt className="sidebar-icon" />{isOpen && <span className="sidebar-text">จัดการนัดหมาย</span>}</Link></li>
-              <li><Link to="/customers"><FaUserFriends className="sidebar-icon" />{isOpen && <span className="sidebar-text">ลูกค้า</span>}</Link></li>
-              <li><Link to="/services"><FaTools className="sidebar-icon" />{isOpen && <span className="sidebar-text">บริการ</span>}</Link></li>
-              <li><Link to="/payouts"><FaMoneyBillWave className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายจ่าย</span>}</Link></li>
-              <li><Link to="/reports"><FaChartBar className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายงาน</span>}</Link></li>
-            </ul>
+              <ul>
+                <li><Link to="/dashboard" onClick={handleMenuClick}><FaTachometerAlt className="sidebar-icon" />{isOpen && <span className="sidebar-text">หน้าหลัก</span>}</Link></li>
+                <li><Link to="/queue" onClick={handleMenuClick}><FaListUl className="sidebar-icon" />{isOpen && <span className="sidebar-text">จัดการคิวงาน</span>}</Link></li>
+                <li><Link to="/appointments" onClick={handleMenuClick}><FaCalendarAlt className="sidebar-icon" />{isOpen && <span className="sidebar-text">จัดการนัดหมาย</span>}</Link></li>
+                <li><Link to="/customers" onClick={handleMenuClick}><FaUserFriends className="sidebar-icon" />{isOpen && <span className="sidebar-text">ลูกค้า</span>}</Link></li>
+                <li><Link to="/services" onClick={handleMenuClick}><FaTools className="sidebar-icon" />{isOpen && <span className="sidebar-text">บริการ</span>}</Link></li>
+                <li><Link to="/payouts" onClick={handleMenuClick}><FaMoneyBillWave className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายจ่าย</span>}</Link></li>
+                <li><Link to="/reports" onClick={handleMenuClick}><FaChartBar className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายงาน</span>}</Link></li>
+              </ul>
           )}
           
 
@@ -137,9 +143,24 @@ useEffect(() => {
           </h2>
           {showLocker && (
             <ul>
-              <li><Link to="/adminLocker/pending-pickup"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายการรอรับจากตู้</span>}</Link></li>
-              <li><Link to="/adminLocker/returntolocker"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">ส่งคืน Locker</span>}</Link></li>
-              <li><Link to="/adminLocker/lockers"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">รายการ Locker</span>}</Link></li>
+              <li>
+                <Link to="/adminLocker/pending-pickup" onClick={handleMenuClick}>
+                  <FaUsersCog className="sidebar-icon" />
+                  {isOpen && <span className="sidebar-text">รายการรอรับจากตู้</span>}
+                </Link>
+              </li>
+              <li>
+                <Link to="/adminLocker/returntolocker" onClick={handleMenuClick}>
+                  <FaUsersCog className="sidebar-icon" />
+                  {isOpen && <span className="sidebar-text">ส่งคืน Locker</span>}
+                </Link>
+              </li>
+              <li>
+                <Link to="/adminLocker/lockers" onClick={handleMenuClick}>
+                  <FaUsersCog className="sidebar-icon" />
+                  {isOpen && <span className="sidebar-text">รายการ Locker</span>}
+                </Link>
+              </li>
             </ul>
           )}
 
@@ -155,11 +176,32 @@ useEffect(() => {
               </h2>
               {showAdmin && (
                 <ul>
-                  <li><Link to="/employee"><FaUsersCog className="sidebar-icon" />{isOpen && <span className="sidebar-text">พนักงาน</span>}</Link></li>
-                  <li><Link to="/branch"><FaBuilding className="sidebar-icon" />{isOpen && <span className="sidebar-text">สาขา</span>}</Link></li>
-                  <li><Link to="/users"><FaUserTie className="sidebar-icon" />{isOpen && <span className="sidebar-text">ผู้ใช้งาน</span>}</Link></li>
-                  <li><Link to="/payments"><FaCreditCard className="sidebar-icon" />{isOpen && <span className="sidebar-text">ชำระเงิน*</span>}</Link></li>
-                </ul>
+                    <li>
+                      <Link to="/employee" onClick={handleMenuClick}>
+                        <FaUsersCog className="sidebar-icon" />
+                        {isOpen && <span className="sidebar-text">พนักงาน</span>}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/branch" onClick={handleMenuClick}>
+                        <FaBuilding className="sidebar-icon" />
+                        {isOpen && <span className="sidebar-text">สาขา</span>}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/users" onClick={handleMenuClick}>
+                        <FaUserTie className="sidebar-icon" />
+                        {isOpen && <span className="sidebar-text">ผู้ใช้งาน</span>}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/payments" onClick={handleMenuClick}>
+                        <FaCreditCard className="sidebar-icon" />
+                        {isOpen && <span className="sidebar-text">ชำระเงิน*</span>}
+                      </Link>
+                    </li>
+                  </ul>
+
               )}
             </>
           )}

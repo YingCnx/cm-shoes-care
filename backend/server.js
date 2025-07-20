@@ -48,7 +48,8 @@ const allowedOrigins = [
   "http://app.suggerb.com",
   "https://app.suggerb.com",
   "http://locker.suggerb.com",
-  "http://149.56.87.48"
+  "http://149.56.87.48",
+  "http://203.172.89.175"
 ];
 const credentialOrigins = allowedOrigins;
 

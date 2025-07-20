@@ -421,16 +421,16 @@ const handleBackup = async () => {
               <div className="card queue-card">
                 <div className="card-body">
                   <h2 className="card-title mb-4">🔄 คิวงานที่รอดำเนินการ ({queue.length} รายการ)</h2>
-
+                    <div className="table-responsive">
                     <table className="table table-hover table-striped">
                       <thead>
                         <tr>
-                          <th>#</th>
+                          <th className="hide-mobile">#</th>
                           <th>ลูกค้า</th>
-                          <th>สถานที่</th>
-                          <th>จำนวนคู่</th>
-                          <th>วันที่รับ</th>
-                          <th>วันที่ส่งคืน</th>
+                          <th className="hide-mobile">สถานที่</th>
+                          <th >จำนวนคู่</th>
+                          <th className="hide-mobile">วันที่รับ</th>
+                          <th className="hide-mobile">วันที่ส่งคืน</th>
                           <th>สถานะ</th>
                         </tr>
                       </thead>
@@ -439,14 +439,14 @@ const handleBackup = async () => {
                           <tr
                             key={item.queue_id}
                             onClick={() => window.location.href = `/queue/${item.queue_id}/detail`}
-                            style={{ cursor: 'pointer' }}
+                            style={{ cursor: 'pointer' }} 
                           >
-                            <td>{index + 1}</td>
+                            <td className="hide-mobile">{index + 1}</td>
                             <td>{item.customer_name}</td>
-                            <td>{item.location}</td>
-                            <td>{item.total_pairs}</td>
-                            <td>{new Date(item.received_date).toLocaleDateString()}</td>
-                            <td>
+                            <td className="hide-mobile">{item.location}</td>
+                            <td >{item.total_pairs}</td>
+                            <td className="hide-mobile">{new Date(item.received_date).toLocaleDateString()}</td>
+                            <td className="hide-mobile">
                               {new Date(item.delivery_date) <= new Date().setHours(0, 0, 0, 0) ? (
                                 <span style={{ color: 'red', fontWeight: 'bold' }}>
                                   {new Date(item.delivery_date).toLocaleDateString()}
@@ -469,10 +469,6 @@ const handleBackup = async () => {
                         ))}
                       </tbody>
                     </table>
-                    <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
-                      <button className="btn btn-outline-secondary" onClick={handleBackup}>
-                        Backup Database
-                      </button>
                     </div>
                 </div>
               </div>
@@ -489,23 +485,24 @@ const handleBackup = async () => {
             <div className="card">
               <div className="card-body">
                 <h2>📅 นัดหมายที่รอดำเนินการ ({appointments.length} รายการ)</h2>
+                <div className="table-responsive">
                 <table className="table table-hover">
                   <thead>
                     <tr>
                       <th>ลูกค้า</th>
-                      <th>เบอร์โทร</th>
-                      <th>สถานที่</th>
-                      <th>วัน/เวลานัดหมาย</th>
-                      <th>สถานะ</th>
+                      <th className="hide-mobile">เบอร์โทร</th>
+                      <th className="hide-mobile">สถานที่</th>
+                      <th className="hide-mobile">วัน/เวลานัดหมาย</th>
+                      <th >สถานะ</th>
                     </tr>
                   </thead>
                   <tbody>
                     {appointments.map(appt => (
                       <tr key={appt.id}>
                         <td>{appt.customer_name}</td>
-                        <td>{appt.phone}</td>
-                        <td>{appt.location}</td>
-                        <td>{new Date(appt.appointment_date).toLocaleDateString()}{" "}{appt.appointment_time.slice(0,5)} น.</td>
+                        <td className="hide-mobile">{appt.phone}</td>
+                        <td className="hide-mobile">{appt.location}</td>
+                        <td className="hide-mobile">{new Date(appt.appointment_date).toLocaleDateString()}{" "}{appt.appointment_time.slice(0,5)} น.</td>
                         <td>
                         <span 
                             className="badge" 
@@ -522,6 +519,7 @@ const handleBackup = async () => {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           </div>

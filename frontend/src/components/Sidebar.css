@@ -11,7 +11,7 @@
   top: 0;
   left: 0;
   z-index: 1000;
-  transition: width 0.3s;
+  transition: left 0.3s ease, width 0.3s ease;
   box-shadow: 6px 0 12px rgba(0, 0, 0, 0.08);
   border-radius: 0 20px 20px 0;
   font-family: 'Prompt', sans-serif;
@@ -21,7 +21,6 @@
   width: 60px;
 }
 
-/* ✅ ปรับระยะบนให้เมนูขึ้น */
 .sidebar {
   padding: 8px 16px;
   flex-grow: 1;
@@ -32,7 +31,6 @@
   scrollbar-color: rgba(255,255,255,0.2) transparent;
 }
 
-/* ✅ หัวข้อหมวดหมู่เมนู */
 .sidebar-section-title {
   font-size: 14px;
   text-transform: uppercase;
@@ -45,10 +43,9 @@
   margin-bottom: 6px;
 }
 
-/* ✅ ลิสต์เมนู */
 .sidebar ul {
-  margin-top: 6px; /* ✅ ระยะห่างด้านบนของเมนูย่อย */
-  margin-bottom: 12px; /* ระยะห่างล่างยังคงไว้ */
+  margin-top: 6px;
+  margin-bottom: 12px;
   padding: 0;
   list-style: none;
   display: flex;
@@ -57,10 +54,9 @@
 }
 
 .sidebar ul li {
-  margin-bottom: 0; /* ไม่ต้องใช้ margin แล้ว */
+  margin-bottom: 0;
 }
 
-/* ✅ ปุ่มเมนู */
 .sidebar ul li a {
   display: flex;
   align-items: center;
@@ -100,7 +96,6 @@
   display: none;
 }
 
-/* ✅ เมนูย่อย Smart Locker */
 .sidebar-submenu li a {
   display: block;
   padding: 10px 20px;
@@ -118,7 +113,6 @@
   font-weight: bold;
 }
 
-/* ✅ ข้อมูลผู้ใช้ด้านล่าง */
 .user-info {
   margin-top: auto;
   font-size: 14px;
@@ -127,7 +121,6 @@
   color: #e0f7fa;
 }
 
-/* ✅ ปุ่มออกจากระบบ */
 .logout-button {
   margin-top: 15px;
   padding: 10px;
@@ -146,7 +139,6 @@
   color: #c62828;
 }
 
-/* ✅ ปุ่ม toggle */
 .sidebar-toggle {
   background: none;
   border: none;
@@ -186,4 +178,30 @@
 .sidebar-section-title-clickable:hover {
   background-color: rgba(255, 255, 255, 0.08);
   opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .sidebar-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 240px;
+    height: 100vh;
+    background: linear-gradient(145deg, #26c6da, #00a5bb) !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1050;
+    border-radius: 0 20px 20px 0;
+    box-shadow: 6px 0 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .sidebar-container.open {
+    transform: translateX(0);
+  }
+
+  /* ซ่อนเนื้อหาหลังเมนูเมื่อเปิด */
+  .main-content.sidebar-open {
+    filter: brightness(0.5);
+    pointer-events: none;
+  }
 }

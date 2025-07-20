@@ -1,22 +1,25 @@
-/* ======= Employee Login UI Style - Soft UI ======= */
-
-.login-page {
-  height: 100vh;
-  background: #e0f7fa;
+/* General layout */
+.login-container {
   display: flex;
   justify-content: center;
   align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: #e0f7fa;
 }
 
+/* Card */
 .login-card {
   background: #ffffff;
   padding: 40px;
   border-radius: 20px;
   box-shadow: 8px 8px 16px #cde0ec, -8px -8px 16px #ffffff;
-  width: 320px;
+  width: 100%;
+  max-width: 400px;
   text-align: center;
 }
 
+/* Title */
 .login-title {
   font-size: 22px;
   font-weight: 600;
@@ -24,10 +27,21 @@
   color: #1e88e5;
 }
 
-.login-input {
-  width: 100%;
+/* Input Group */
+.input-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.input-icon {
+  margin-right: 10px;
+  color: #1e88e5;
+}
+
+.input-field {
+  flex: 1;
   padding: 14px 16px;
-  margin-bottom: 18px;
   border: none;
   border-radius: 12px;
   background: #f9f9f9;
@@ -36,10 +50,15 @@
   transition: all 0.3s ease;
 }
 
-.login-input:focus {
+.input-field:focus {
   outline: none;
   box-shadow: inset 2px 2px 6px #90caf9, inset -2px -2px 6px #ffffff;
   background: #fff;
+}
+
+/* Button */
+.button-container {
+  margin-top: 20px;
 }
 
 .login-button {
@@ -58,4 +77,40 @@
 
 .login-button:hover {
   transform: scale(1.03);
+}
+
+/* ✅ Responsive Design */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 24px;
+  }
+
+  .login-title {
+    font-size: 20px;
+  }
+
+  .input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .input-icon {
+    margin: 0 0 8px 0;
+  }
+}
+
+/* ป้องกันการล้นของ input ภายใน container */
+.login-container,
+.login-card,
+.login-form,
+.input-group,
+.input-field,
+select {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* ป้องกัน scroll แนวนอน */
+body {
+  overflow-x: hidden;
 }

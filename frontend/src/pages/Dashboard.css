@@ -251,4 +251,27 @@ body {
   .logout-button {
     margin-top: 10px;
   }
+    .summary-cards {
+    flex-direction: column;
+  }
+   .card-title {
+    font-size: 16px;
+  }
+   .card-text, .card-value, .fs-5 {
+    font-size: 14px;
+  }
+    .dashboard-container {
+    padding: 10px;
+  }
+   .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .badge-status {
+  max-width: 100%;
+  word-break: break-word;
+  }
+    .hide-mobile {
+    display: none;
+  }
 }

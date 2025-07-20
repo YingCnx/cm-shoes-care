@@ -231,7 +231,7 @@ const QueueAdmin = () => {
                             <tr key={item.queue_id} onClick={() => navigate(`/queue/${item.queue_id}/detail`)}>
                                 <td>{index + 1}</td>
                                 <td className="text-start"><small className="text-muted">{item.source}</small></td>
-                                <td>{item.customer_name}</td>
+                                <td className="td-hide">{item.customer_name}</td>
                                 <td className="td-hide">{item.location}</td>
                                 <td>{item.total_pairs}</td>
                                 <td>{item.total_price}</td>
