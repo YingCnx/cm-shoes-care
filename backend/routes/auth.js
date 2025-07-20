@@ -10,6 +10,8 @@ import authEmployeeRoutes from "./authEmployee.js";
 router.use("/admin", authAdminRoutes);
 router.use("/", authEmployeeRoutes);
 
+
+
 // ✅ ตรวจสอบ session จาก session-based login
 router.get("/check", authMiddleware, (req, res) => {
   const { id, email, role, branch_id } = req.session.user;
@@ -29,8 +31,10 @@ router.post("/logout", (req, res) => {
   });
 });
 
+
 router.get("/ping", (req, res) => {
   res.send("✅ Auth API OK without login");
 });
+
 
 export default router;
